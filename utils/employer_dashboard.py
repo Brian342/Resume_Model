@@ -10,9 +10,9 @@ It has three tabs:
   Tab 3 — Applicants : review applicants, approve or reject, send email
 
 IMPORTS USED:
-  db.py functions  — all database reads/writes
-  email_utils.py   — sending approval/rejection emails (we build this next)
-  streamlit        — all UI components
+  db.py functions — all databases read/write
+  email_utils.py — sending approval/rejection emails (we build this next)
+  streamlit — all UI components
   json             — to decode the answers stored as JSON in the DB
 """
 import streamlit as st
@@ -67,7 +67,7 @@ def show_overview_tab(employer_id):
     for job in jobs:
         apps = get_applications_by_job(job["id"])
         total_applicants += len(apps)
-        pending_count += sum(i for a in apps if a["status"] == "pending")
+        pending_count += sum(a for a in apps if a["status"] == "pending")
 
     # st.columns creates a row of equal-width columns
     # st.metric shows a big number with a label - perfect for dashboards

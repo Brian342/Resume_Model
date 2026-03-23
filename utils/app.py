@@ -33,7 +33,6 @@ from seeker_dashboard import show_seeker_dashboard
 # Page Configuration
 st.set_page_config(
     page_title="Pioneer Insurance Group Job Match",
-    page_icon="🧳",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -180,7 +179,7 @@ def show_login_page():
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        st.markdown("## 🧳 JobMatch")
+        st.markdown("## JobMatch")
         st.markdown("##### Pioneer Insurance Group Job Match Platform")
         st.divider()
 
@@ -284,18 +283,15 @@ def show_sidebar():
             if st.button("Browse Jobs", use_container_width=True):
                 st.session_state["current_page"] = "job_board"
                 st.rerun()
-            # st.page_link("Pages/seeker_dashboard.py", label="My Dashboard", icon="📊")
-            # st.page_link("Pages/job_board.py", label="Browse Jobs", icon="🕵️")
 
         else:  # employer
             st.markdown("**Navigation**")
             if st.button("Dashboard", use_container_width=True):
                 st.session_state["current_page"] = "employer_dashboard"
                 st.rerun()
-            # st.page_link("Pages/employer_dashboard.py", label="Dashboard", icon="📊")
 
         st.divider()
-        if st.button(" (🪵out) Log out", use_container_width=True):
+        if st.button("Log out", use_container_width=True):
             do_logout()
 
 
