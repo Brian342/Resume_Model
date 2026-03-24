@@ -34,3 +34,14 @@ IMPORTS USED:
     JSON -> encode answers dict as a string for the database
     os / pathlib -> save the uploaded resume file to disk
 """
+import streamlit as st
+import json
+import os
+from pathlib import Path
+from db import (
+    get_job_by_id,
+    create_application,
+    update_application_score,
+    has_applied
+)
+
