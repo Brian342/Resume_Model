@@ -45,3 +45,26 @@ from db import (
     has_applied
 )
 
+# Resume Storage Folder
+UPLOAD_DIR = Path(__file__).parent / "uploads" / "resume"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# AI SCORE PLACEHOLDER
+def score_resume(resume_text: str, job_description: str, job_requirements: str):
+    """
+    PLACEHOLDER - Replace this with your ML model
+
+    This function receives:
+        resume_text: raw text extracted from the PDF
+        job_description: the job's description from the database
+        job_requirements: the job's requirements from the database
+
+    It should return:
+        score (float): 0 to 100 match score
+        label (str): "Qualified", "Not Qualified", or "Review Needed"
+
+    Returns a fixed placeholder so the rest of the
+    system works end-to-end while you build the ML model.
+    """
+    #
