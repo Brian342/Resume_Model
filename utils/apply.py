@@ -66,5 +66,10 @@ def score_resume(resume_text: str, job_description: str, job_requirements: str):
 
     Returns a fixed placeholder so the rest of the
     system works end-to-end while you build the ML model.
+
+    WHEN YOU ARE READY TO ADD ML:
+        1. Replace the two lines below with your model's prediction
+        2. The rest of the system already handles the score - nothing
+            else needs to change.
     """
     #
