@@ -151,3 +151,37 @@ def show_job_details(job, seeker_id: int):
                 st.session_state["apply_stage"] = "form"
                 st.rerun()
     st.divider()
+
+    # Job body
+    tab1, tab2 = st.tabs(["Job Description", "Requirements"])
+
+    with tab1:
+        st.markdown("### About the Role")
+        # Replace newlines with proper markdown line breaks
+        st.markdown(job["description"].replace("\n", "\n\n"))
+    with tab2:
+        st.markdown("### What we're Looking For")
+        st.markdown(job["requirements"].replace("\n", "\n\n"))
+
+
+# Stage 2 Application Form
+def show_application_form(job, seeker_id: int):
+    """
+    Renders the full application form.
+    Sections:
+      1. Job title reminder at the top
+      2. Resume upload (PDF only)
+      3. Four screening questions
+      4. AI interview question placeholder
+      5. Submit button
+    On submit:
+      - Saves resume to disk
+      - Extracts text from PDF
+      - Saves application to database
+      - Calls ML scorer placeholder
+      - Updates score in database
+      - Shows success confirmation
+    job       : Row object for the job being applied to
+    seeker_id : logged-in seeker's user ID
+    """
+    # Back button
