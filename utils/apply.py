@@ -185,3 +185,28 @@ def show_application_form(job, seeker_id: int):
     seeker_id : logged-in seeker's user ID
     """
     # Back button
+    if st.button("<- Back to Job Details"):
+        st.session_state["apply_stage"] = "details"
+        st.rerun()
+    st.markdown(f"## Apply for: {job['title']}")
+    st.markdown(f"**{job['company']}** · {job['location']}")
+    st.divider()
+
+    # Section 1: Resume Upload
+    st.markdown("### Resume Upload")
+    st.markdown("Upload your resume in PDF format. Make sure it is up to date")
+
+    uploaded_file = st.file_uploader(
+        label="Choose your resume (PDF only)",
+        type=["pdf"],
+        key="resume_upload",
+        help="Maximum file size: 5MB"
+    )
+
+    if uploaded_file:
+        # Show a small preview of what was uploaded
+        st.success(f"Resume Uploaded: **{uploaded_file.name}** "
+                   f"({uploaded_file.size / 1024:.1f} KB)")
+
+    st.divider()
+
