@@ -434,5 +434,30 @@ def show_success_screen(job):
         "2. The employer will review your application and score.\n"
         "3. You will receive an **email notification** once a decision is made.\n"
         "4. Track your application status in **My Applications**."
-
     )
+
+    st.markdown("---")
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        if st.button(
+            "View My Applications",
+            use_container_width=True,
+            type="primary"
+        ):
+    # Clean up apply-related state and go to dashboard
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.session_state.pop("selected_job_id", None)
+            st.session_state.pop("apply_stage", None)
+            st.rerun()
+
+    with col_b:
+        if st.button("Browse More Jobs", use_container_width=True):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.session_state.pop("selected_job_id", None)
+            st.session_state.pop("apply_stage", None)
+            st.rerun()
+
+
+
+
