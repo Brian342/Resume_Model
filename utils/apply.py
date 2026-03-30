@@ -458,6 +458,52 @@ def show_success_screen(job):
             st.session_state.pop("apply_stage", None)
             st.rerun()
 
+# Main Function - called from app.py
+def show_apply_page():
+    """
+    Entry point for this page.
+    app.py calls this when current_page == "apply".
 
+    Read selected_job_id from session_state.
+    Controls which stage is shown via apply_stage:
+      "detail" → Stage 1: job information + Apply Now button
+      "form" → Stage 2: resume upload + questions + submit
+      "success" → Stage 3: confirmation screen
+    """
+    seeker_id = st.session_state["user_id"]
+
+    # Safety check - if no job was selected, send back to dashboard
+    job_id = st.session_state.get("Selected_job_id")
+    if not job_id:
+        st.warning("No job selected. Please choose a job from the job board.")
+        if st.button("Back to Jobs"):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+        return
+
+    # Fetch the full job from the database
+    job = get_job_by_id(job_id)
+    if not job:
+        st.error("Job not found. It may have been removed.")
+        if st.button("Back to Jobs"):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+        return
+
+    # Initialize apply_stage if not set
+    if "apply_stage" not in st.session_state:
+        st.session_state["apply_stage"] = "detail"
+
+    # Route to the correct stage
+    stage = st.session_state["apply_stage"]
+
+    if stage == "detail":
+        show_job_details(job, seeker_id)
+
+    elif stage == "form":
+        show_application_form(job, seeker_id)
+
+    elif stage == "success":
+        show_success_screen(job)
 
 
