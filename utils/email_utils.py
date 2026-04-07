@@ -47,3 +47,30 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+# Email Configuration
+
+EMAIL_PROVIDER = "gmail"  # <- gmail| outlook| sendgrid
+SENDER_EMAIL = "migelbrian3@gmail.com"  # <- sending email
+SENDER_PASSWORD = "app_password"  # <- Not the login pasSword
+
+SENDGRID_API_KEY = ""  # <-Only used when needed
+
+# smtp settings per provider - no need to change these
+SMTP_SETTINGS = {
+    "gmail": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+    },
+    "outlook": {
+        "host": "smtp.office365.com",
+        "port": 587,
+    },
+}
+
+# Company branding - appears in email headers and footer
+COMPANY_NAME = "Pioneer Insurance Group"
+COMPANY_EMAIL = SENDER_EMAIL
+COMPANY_WEBSITE = "https://www.pioneerinsurance.co.ke"
+
+#
+
