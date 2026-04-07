@@ -72,5 +72,53 @@ COMPANY_NAME = "Pioneer Insurance Group"
 COMPANY_EMAIL = SENDER_EMAIL
 COMPANY_WEBSITE = "https://www.pioneerinsurance.co.ke"
 
-#
 
+# Core Email Sender
+
+def send_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
+    """
+    Sends an HTML email using the configured provider
+    
+    recipient: recipient email address
+    subject: email subject line
+    html_body: full HTML content of the email
+
+    Returns (Success: bool, message: str)
+
+    How smtp works:
+        1. We create a secure SSL/TLS connection to the mail server
+        2. we log in with our sender credentials
+        3. we hand off the message to the server
+        4. The server delivers it to the recipient
+    The whole happens in 1-2 seconds
+    """
+    if EMAIL_PROVIDER == "sendgrid":
+        return _send_via_sendgrid(to_email, subject, html_body)
+
+    # ─ Build the email message
+    # object ───────────────────────────────────────
+    # MIMEMultipart("alternative") means the email has both plain text
+    # and HTML versions — mail clients show whichever they support.
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = f"{COMPANY_NAME} <{SENDER_EMAIL}"
+    message["To"] = to_email
+
+    # Plain text fallback or email clients that don't render HTML
+    plain_text = (
+        f"{subject}\n\n"
+        f"Please view this email in an HTML-capable email client.\n\n"
+        f"{COMPANY_NAME}"
+    )
+
+    message.attach(MIMEText(plain_text, "plain"))
+    message.attach(MIMEText(html_body, "html"))
+
+
+
+
+
+
+def _send_via_sendgrid(to_email, subject, html_body):
+    pass
