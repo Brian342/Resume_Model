@@ -46,13 +46,18 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+import os
 
 # Email Configuration
 
-EMAIL_PROVIDER = "gmail"  # <- gmail| outlook| sendgrid
-SENDER_EMAIL = "migelbrian3@gmail.com"  # <- sending email
-SENDER_PASSWORD = "app_password"  # <- Not the login pasSword
+load_dotenv()
 
+EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "gmail")  # <- gmail| outlook| sendgrid
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")  # <- sending email
+SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "")  # <- Not the login pasSword
+COMPANY_NAME = os.getenv("COMPANY_NAME", "Pioneer Insurance Group")
+COMPANY_WEBSITE = os.getenv("COMPANY_WEBSITE", "https://www.pioneerinsurance.co.ke")
 SENDGRID_API_KEY = ""  # <-Only used when needed
 
 # smtp settings per provider - no need to change these
@@ -66,11 +71,8 @@ SMTP_SETTINGS = {
         "port": 587,
     },
 }
-
 # Company branding - appears in email headers and footer
-COMPANY_NAME = "Pioneer Insurance Group"
 COMPANY_EMAIL = SENDER_EMAIL
-COMPANY_WEBSITE = "https://www.pioneerinsurance.co.ke"
 
 
 # Core Email Sender
@@ -376,7 +378,8 @@ def send_approval_email(to_email: str, to_name: str, job_title: str, company: st
     html_body = _approve_template(to_name, job_title, company)
     return send_email(to_email, subject, html_body)
 
-def send_rejection_email(to_email: str, to_name: str, job_title: str, company: str)->tuple[bool, str]:
+
+def send_rejection_email(to_email: str, to_name: str, job_title: str, company: str) -> tuple[bool, str]:
     """
     Sends a respectful rejection email to an unsuccessful applicant.
 
@@ -390,5 +393,42 @@ def send_rejection_email(to_email: str, to_name: str, job_title: str, company: s
 
     Returns (success: bool, message: str)
     """
+    subject = f"Update on Your application for {job_title} at {company}"
+    html_body = _rejection_template(to_name, job_title, company)
+    return send_email(to_email, subject, html_body)
 
 
+# TEST FUNCTION
+
+def test_email_connection():
+    """
+        Run this directly to test your email setup before using the app.
+
+        Usage:
+            python email_utils.py
+
+        It sends a test email to SENDER_EMAIL (yourself) so you can
+        verify the connection works without going through the app.
+        """
+    print(f"Testing Email connection....")
+    print(f"Provider: {EMAIL_PROVIDER}")
+    print(f"From: {SENDER_EMAIL}")
+    print(f"Sending test email to yourself....")
+
+    success, message = send_approval_email(
+        to_email=SENDER_EMAIL,  # send to yourself as a test
+        to_name="Test User",
+        job_title="Software Engineer",
+        company=COMPANY_NAME
+    )
+
+    if success:
+        print(f"Congratulation: {message}")
+        print("Check Your Inbox")
+
+    else:
+        print(f"Sorry {message}")
+
+
+if __name__ == "__main__":
+    test_email_connection()
