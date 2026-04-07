@@ -144,7 +144,7 @@ def send_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
         return False, f"Unexpected Error: {str(e)}"
 
 
-def _send_via_sendgrid(to_email: str, subject: str, html_body:str) -> tuple[bool, str]:
+def _send_via_sendgrid(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
     """
     Sends email using the sendGrid API
     Only called when EMAIL_PROVIDER == "sendgrid"
@@ -156,17 +156,217 @@ def _send_via_sendgrid(to_email: str, subject: str, html_body:str) -> tuple[bool
         from sendgrid.helpers.mail import Mail
 
         mail = Mail(
-            from_email = SENDER_EMAIL,
-            to_emails = to_email,
-            subject = subject,
-            html_content = html_body
+            from_email=SENDER_EMAIL,
+            to_emails=to_email,
+            subject=subject,
+            html_content=html_body
         )
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(mail)
-        
-        if responce.status_code in (200, 202):
-            return True, f"Email sentvia SendGrid to {to_email}"
+
+        if response.status_code in (200, 202):
+            return True, f"Email sent via SendGrid to {to_email}"
         else:
+            return False, f"SendGrid returned status {response.status_code}"
+
+    except ImportError:
+        return False, "SendGrid not Installed. Run: Pip Install sendgrid"
+    except Exception as e:
+        return False, f"Sendgrid error: {str(e)}"
 
 
+# Email Template
+def _base_template(content: str) -> str:
+    """
+    Wraps any email content in a clean, professional HTML shell
+    All emails share this same outer wrapper for consistent branding.
 
+    Content: The inner HTML specific to each email type
+    """
+    return f"""
+            <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0"
+               style="background-color:#f4f4f4;padding:40px 0;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0"
+                           style="background:#ffffff;border-radius:8px;
+                                  overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+ 
+                        <!-- Header -->
+                        <tr>
+                            <td style="background:#1a237e;padding:28px 40px;">
+                                <h1 style="margin:0;color:#ffffff;font-size:22px;
+                                           font-weight:600;letter-spacing:0.5px;">
+                                    {COMPANY_NAME}
+                                </h1>
+                                <p style="margin:4px 0 0;color:#9fa8da;font-size:13px;">
+                                    Talent Acquisition Team
+                                </p>
+                            </td>
+                        </tr>
+ 
+                        <!-- Body -->
+                        <tr>
+                            <td style="padding:40px;">
+                                {content}
+                            </td>
+                        </tr>
+ 
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background:#f8f9fa;padding:24px 40px;
+                                       border-top:1px solid #e0e0e0;">
+                                <p style="margin:0;color:#9e9e9e;font-size:12px;
+                                          text-align:center;line-height:1.6;">
+                                    This email was sent by {COMPANY_NAME} Recruitment System.<br>
+                                    If you have questions, contact us at
+                                    <a href="mailto:{COMPANY_EMAIL}"
+                                       style="color:#1a237e;">{COMPANY_EMAIL}</a><br>
+                                    <a href="{COMPANY_WEBSITE}"
+                                       style="color:#1a237e;">{COMPANY_WEBSITE}</a>
+                                </p>
+                            </td>
+                        </tr>
+ 
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
+
+def _approve_template(to_name: str, job_title: str, company: str) -> str:
+    """Builds the HTML Content for the approval email"""
+    content = f"""
+        <h2 style="margin:0 0 8px;color:#1a237e;font-size:24px;">
+            Congratulations, {to_name}! 
+        </h2>
+        <p style="margin:0 0 24px;color:#4caf50;font-size:16px;font-weight:600;">
+            Your application has been approved.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 16px;">
+            We are delighted to inform you that after careful review of your application
+            and resume, you have been <strong>selected to move forward</strong> in our
+            recruitment process for the position below.
+        </p>
+ 
+        <!-- Job detail box -->
+        <table width="100%" cellpadding="0" cellspacing="0"
+               style="background:#e8f5e9;border-radius:6px;
+                      border-left:4px solid #4caf50;margin:24px 0;">
+            <tr>
+                <td style="padding:20px 24px;">
+                    <p style="margin:0 0 6px;color:#2e7d32;font-size:13px;
+                               font-weight:600;text-transform:uppercase;
+                               letter-spacing:0.8px;">Position</p>
+                    <p style="margin:0 0 12px;color:#1a237e;font-size:20px;
+                               font-weight:700;">{job_title}</p>
+                    <p style="margin:0;color:#555;font-size:14px;">{company}</p>
+                </td>
+            </tr>
+        </table>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 16px;">
+            Our recruitment team will be in touch with you shortly with the
+            <strong>next steps</strong>, which may include a formal interview,
+            assessment, or offer letter.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 24px;">
+            Please ensure your contact details are up to date and watch your
+            inbox for further communication from our team.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0;">
+            We look forward to the possibility of welcoming you to the
+            <strong>{company}</strong> family.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;margin:24px 0 0;">
+            Warm regards,<br>
+            <strong>Talent Acquisition Team</strong><br>
+            {COMPANY_NAME}
+        </p>
+    """
+    return _base_template(content)
+
+
+def _rejection_template(to_name: str, job_title: str, company: str) -> str:
+    """Builds the HTML content for the rejection email"""
+    content = f"""
+        <h2 style="margin:0 0 8px;color:#1a237e;font-size:24px;">
+            Dear {to_name},
+        </h2>
+        <p style="margin:0 0 24px;color:#757575;font-size:15px;">
+            Regarding your application for <strong>{job_title}</strong>
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 16px;">
+            Thank you for taking the time to apply for the
+            <strong>{job_title}</strong> position at <strong>{company}</strong>
+            and for the interest you have shown in joining our organisation.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 16px;">
+            After carefully reviewing all applications, we regret to inform you
+            that we will not be moving forward with your application at this time.
+            This was a difficult decision as we received many strong applications
+            for this role.
+        </p>
+ 
+        <!-- Encouragement box -->
+        <table width="100%" cellpadding="0" cellspacing="0"
+               style="background:#fff3e0;border-radius:6px;
+                      border-left:4px solid #ff9800;margin:24px 0;">
+            <tr>
+                <td style="padding:20px 24px;">
+                    <p style="margin:0;color:#e65100;font-size:14px;line-height:1.7;">
+                        <strong>Keep going!</strong> This decision does not reflect
+                        your overall potential. We encourage you to continue applying
+                        to future opportunities with us as new positions become available.
+                    </p>
+                </td>
+            </tr>
+        </table>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 16px;">
+            We will keep your details on file and may reach out should a suitable
+            opportunity arise in the future.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;line-height:1.7;margin:0 0 24px;">
+            We wish you all the best in your job search and future career endeavours.
+        </p>
+ 
+        <p style="color:#424242;font-size:15px;margin:0;">
+            Kind regards,<br>
+            <strong>Talent Acquisition Team</strong><br>
+            {COMPANY_NAME}
+        </p>
+        """
+    return _base_template(content)
+
+
+# PUBLIC FUNCTION - called from employer_dashboard.py
+def send_approval_email(to_email: str, to_name: str, job_title: str, company: str) -> tuple[bool, str]:
+    """
+    Sends a congratulation email to an approved applicant.
+
+    Called rom employer_dashboard.py when the Approve button is clicked:
+        send_approval_email(
+            to_email = seeker_email,
+            to_name = seeker_name,
+            job_title = job["title"],
+            company = job["company")
+    """
