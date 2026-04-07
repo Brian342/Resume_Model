@@ -115,10 +115,42 @@ def send_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
     message.attach(MIMEText(plain_text, "plain"))
     message.attach(MIMEText(html_body, "html"))
 
+    # send via smtp
+    try:
+        settings = SMTP_SETTINGS.get(EMAIL_PROVIDER, SMTP_SETTINGS["gmail"])
+
+        # ssl.create_default_context() creates a secure encrypted connection
+        context = ssl.create_default_context()
+        with smtplib.SMTP(settings["host"], settings["port"]) as server:
+            server.ehlo()  # identify ourselves to the ser
+            server.starttls(context=context)  # upgrade o encrypted connection
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(
+                SENDER_EMAIL,
+                to_email,
+                message.as_string()
+            )
+        return True, f"Email Sent Successfully to {to_email}"
+
+    except smtplib.SMTPAuthenticationError:
+        return False, (
+            "Authentication Failed. Check your Email and app Password"
+            "For Gmail make sure you're using app password not your login password"
+        )
+
+    except smtplib.SMTPException as e:
+        return False, f"SMTP error: {str(e)}"
+    except Exception as e:
+        return False, f"Unexpected Error: {str(e)}"
 
 
+def _send_via_sendgrid(to_email: str, subject: str, html_body:str) -> tuple[bool, str]:
+    """
+    Sends email using the sendGrid API
+    Only called when EMAIL_PROVIDER == "sendgrid"
+
+    Requires: pip install sendgrid
+    """
+    try:
 
 
-
-def _send_via_sendgrid(to_email, subject, html_body):
-    pass
