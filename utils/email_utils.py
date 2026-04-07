@@ -152,5 +152,21 @@ def _send_via_sendgrid(to_email: str, subject: str, html_body:str) -> tuple[bool
     Requires: pip install sendgrid
     """
     try:
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+
+        mail = Mail(
+            from_email = SENDER_EMAIL,
+            to_emails = to_email,
+            subject = subject,
+            html_content = html_body
+        )
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(mail)
+        
+        if responce.status_code in (200, 202):
+            return True, f"Email sentvia SendGrid to {to_email}"
+        else:
+
 
 
