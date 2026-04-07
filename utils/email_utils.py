@@ -369,4 +369,26 @@ def send_approval_email(to_email: str, to_name: str, job_title: str, company: st
             to_name = seeker_name,
             job_title = job["title"],
             company = job["company")
+
+    Returns (success: bool, message:str)
     """
+    subject = f"Congratulations! Your Application for {job_title} has been approved"
+    html_body = _approve_template(to_name, job_title, company)
+    return send_email(to_email, subject, html_body)
+
+def send_rejection_email(to_email: str, to_name: str, job_title: str, company: str)->tuple[bool, str]:
+    """
+    Sends a respectful rejection email to an unsuccessful applicant.
+
+    Called from employer_dashboard.py when the Reject button is clicked:
+        send_rejection_email(
+            to_email  = seeker_email,
+            to_name   = seeker_name,
+            job_title = job["title"],
+            company   = job["company"]
+        )
+
+    Returns (success: bool, message: str)
+    """
+
+
