@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import sqlite3
 import os
 
-
 DB_PATH = os.path.join(os.path.dirname(__file__), "Resume_app.db")
 
 
@@ -47,7 +46,7 @@ def create_table():
     CREATE TABLE IF NOT EXISTS users(
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name       TEXT        NOT NULL,
-    emaIl           TEXT        NOT NULL UNIQUE,
+    email           TEXT        NOT NULL UNIQUE,
     password        TEXT        NOT NULL,
     role            TEXT        NOT NULL CHECK(role IN ('seeker', 'employer')),
     created_at      TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
@@ -290,7 +289,8 @@ def get_applications_by_job(job_id):
         FROM applications a
         JOIN users u ON a.seeker_id = u.id
         WHERE a.job_id = ?
-        ORDER BY a.ai_score DESC NULLS LAST
+        ORDER BY CASE WHEN a.ai_score IS NULL THEN 1 ELSE 0 END,
+                 a.ai_score DESC
     """, (job_id,)).fetchall()
     conn.close()
     return apps
@@ -335,12 +335,12 @@ def get_seeker_stats(seeker_id):
     return {
         "total_applied": total,
         "qualified": qualified,
-        "pending":pending,
+        "pending": pending,
         "rejected": rejected
     }
 
 
-def update_application_score(application_id, ai_score, ml_label):
+def update_application_status(application_id, status):
     """
     Updates the AI score and Ml label for an application after screening.
     Called from apply.py after your AI/ML model processes the resume.
@@ -352,9 +352,27 @@ def update_application_score(application_id, ai_score, ml_label):
     conn = get_connection()
     conn.execute("""
         UPDATE applications
-        SET ai_score = ?, ml_label = ?
+        SET  status = ?
         WHERE id = ?
-    """, (ai_score, ml_label, application_id))
+    """, (status, application_id))
+    conn.commit()
+    conn.close()
+
+
+def update_application_score(application_id, ai_score, ml_label):
+    """
+        Updates the AI score and ML label after resume screening.
+        Called from apply.py after the ML model processes the resume.
+
+        ai_score: float 0-100
+        ml_label: string e.g "Qualified", "Not Qualified", "Review Needed"
+        """
+    conn = get_connection()
+    conn.execute("""
+            UPDATE applications
+            SET ai_score = ?, ml_label = ?
+            WHERE id = ?
+        """, (ai_score, ml_label, application_id))
     conn.commit()
     conn.close()
 

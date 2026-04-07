@@ -21,7 +21,7 @@ from db import (
     create_job,
     get_jobs_by_employer,
     get_applications_by_job,
-    update_application_score,
+    update_application_status,
     toggle_job_active
 )
 
@@ -67,7 +67,7 @@ def show_overview_tab(employer_id):
     for job in jobs:
         apps = get_applications_by_job(job["id"])
         total_applicants += len(apps)
-        pending_count += sum(a for a in apps if a["status"] == "pending")
+        pending_count += sum(1 for a in apps if a["status"] == "pending")
 
     # st.columns creates a row of equal-width columns
     # st.metric shows a big number with a label - perfect for dashboards
@@ -160,23 +160,23 @@ def show_post_job_tab(employer_id):
 
         # Handle submission
         # This runs AFTER form block - important: Logic goes outside the form
-        if submitted:
-            # Validate required fields
-            if not all([title, company, location, description, requirements]):
-                st.error("Please fill in all required fields marked with *")
-            else:
-                job_id = create_job(
-                    employer_id=employer_id,
-                    title=title.strip(),
-                    company=company.strip(),
-                    location=location.strip(),
-                    description=description.strip(),
-                    requirements=requirements.strip(),
-                    salary=salary.strip()
-                )
+    if submitted:
+        # Validate required fields
+        if not all([title, company, location, description, requirements]):
+            st.error("Please fill in all required fields marked with *")
+        else:
+            job_id = create_job(
+                employer_id=employer_id,
+                title=title.strip(),
+                company=company.strip(),
+                location=location.strip(),
+                description=description.strip(),
+                requirements=requirements.strip(),
+                salary=salary.strip()
+            )
 
-                st.success(f"Job Posted Successfully: Job ID #{job_id}")
-                st.balloons()
+            st.success(f"Job Posted Successfully: Job ID #{job_id}")
+            st.balloons()
 
 
 # TAB 3 Applicants
@@ -278,7 +278,7 @@ def show_applicants_tab(employer_id):
                     try:
                         answers = json.loads(app["answers"])
                         for question, answer in answers.items():
-                            st.markdown(f"- **[question]:** {answer}")
+                            st.markdown(f"- **{question}:** {answer}")
                     except (json.JSONDecodeError, TypeError):
                         st.markdown(f"_{app['answers']}_")
 
@@ -290,47 +290,50 @@ def show_applicants_tab(employer_id):
                 if status == "pending":
                     if st.button(
                             "Approve",
-                            keys=f"approve_{app_id}",
+                            key=f"approve_{app_id}",
                             use_container_width=True,
                             type="primary"
                     ):
-                        update_application_score(app_id, "approved")
+                        update_application_status(app_id, "approved")
 
                         # Send Congratulation email
                         if EMAIL_READY:
                             job = [j for j in jobs if j["id"] == selected_job_id][0]
-                            send_approval_email(
+                            success, msg = send_approval_email(
                                 to_email=seeker_email,
                                 to_name=seeker_name,
                                 job_title=job["title"],
-                                company = job["company"]
+                                company=job["company"]
                             )
-                            st.success(f"Approved: Congratulations email sent to {seeker_email}")
-
-                        else:
-                            st.success("Approved: (Email will send once email_utils.py is set up.)")
+                            if success:
+                                st.success(f"Approved: Congratulations email sent to {seeker_email}")
+                            else:
+                                st.success("Approved!")
+                                st.warning(f"Email Failed: {msg}")
 
                         st.rerun()
 
                     if st.button(
-                        "Reject",
-                        key=f"reject_{app_id}",
-                        use_container_width=True
+                            "Reject",
+                            key=f"reject_{app_id}",
+                            use_container_width=True
                     ):
-                        update_application_score(app_id, "rejected")
+                        update_application_status(app_id, "rejected")
 
                         #Send Rejection email
                         if EMAIL_READY:
                             job = [j for j in jobs if j["id"] == selected_job_id][0]
-                            send_rejection_email(
-                                to_email = seeker_email,
-                                to_name = seeker_name,
-                                job_title = job["title"],
-                                company = job["company"]
+                            success, msg = send_rejection_email(
+                                to_email=seeker_email,
+                                to_name=seeker_name,
+                                job_title=job["title"],
+                                company=job["company"]
                             )
-                            st.warning(f"Rejected. Notification sent to {seeker_email}.")
-                        else:
-                            st.warning(f"Rejected. (Email will send once email_utils.py is set up.)")
+                            if success:
+                                st.warning(f"Rejected. Notification sent to {seeker_email}.")
+                            else:
+                                st.warning(f"Rejected!")
+                                st.error(f"Email failed: {msg}")
 
                         st.rerun()
 
@@ -367,5 +370,3 @@ def show_employer_dashboard():
 
     with tab3:
         show_applicants_tab(employer_id)
-
-

@@ -42,7 +42,7 @@ def status_badge(status: str) -> str:
     colours = {
         "pending": ("#f0f0f0", "#555555"),
         "approved": ("#e6f4ea", "#2e7d32"),
-        "rejected": ("#fdecea", "c62828"),
+        "rejected": ("#fdecea", "#c62828"),
     }
     bg, fg = colours.get(status, ("#f0f0f0", "#555555"))
     label = status.upper()
@@ -67,7 +67,7 @@ def score_bar(score) -> str:
     if score >= 70:
         colour = "#2e7d32"  # green
     elif score >= 40:
-        colour = "e65100"  # orange
+        colour = "#e65100"  # orange
     else:
         colour = "#c62828"  # red
 
@@ -180,10 +180,10 @@ def show_overview_tab(seeker_id: int):
         st.markdown(f"You have applied to **{stats['total_applied']}** job(s) in total.")
         if stats["qualified"] > 0:
             st.success(f"Congratulations! you have been approved for **{stats['qualified']}** Position(s).")
-            if stats["pending"] > 0:
-                st.info(f"**{stats['pending']}** application(s) are still under review.")
-            if stats["rejected"] > 0:
-                st.warning(f"Keep going! **{stats['rejected']}** application(s) were unsuccessful - more opportunities await.")
+        if stats["pending"] > 0:
+            st.info(f"**{stats['pending']}** application(s) are still under review.")
+        if stats["rejected"] > 0:
+            st.warning(f"Keep going! **{stats['rejected']}** application(s) were unsuccessful - more opportunities await.")
 
 
 # Tab 2 My Applications

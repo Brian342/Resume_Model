@@ -121,6 +121,7 @@ def save_resume(uploaded_file, seeker_id: int, job_id: int) -> str:
 
     return str(file_path)
 
+
 # STAGE 1 — JOB DETAIL VIEW
 def show_job_details(job, seeker_id: int):
     """
@@ -208,7 +209,7 @@ def show_application_form(job, seeker_id: int):
     """
     # Back button
     if st.button("<- Back to Job Details"):
-        st.session_state["apply_stage"] = "details"
+        st.session_state["apply_stage"] = "detail"
         st.rerun()
     st.markdown(f"## Apply for: {job['title']}")
     st.markdown(f"**{job['company']}** · {job['location']}")
@@ -328,7 +329,7 @@ def show_application_form(job, seeker_id: int):
         "Submit Application",
         type="primary",
         use_container_width=True,
-        disabled=not agreed  # Button is greyed out until checkbox is ticked
+        disabled=not agreed  # Button is greyed out until the checkbox is ticked
     )
 
     # Handle Submission
@@ -337,7 +338,7 @@ def show_application_form(job, seeker_id: int):
         errors = []
 
         if not uploaded_file:
-            errors.append("Please upload your resume (PDF)".)
+            errors.append("Please upload your resume (PDF).")
         if not q1.strip():
             errors.append("Please answer Question 1.")
         if not q2.strip():
@@ -346,7 +347,7 @@ def show_application_form(job, seeker_id: int):
         if errors:
             for error in errors:
                 st.error(error)
-            return # stop here dont submit untill errors are fixed
+            return  # stop here dont submit untill errors are fixed
 
         # save resume to disk
         resume_path = save_resume(uploaded_file, seeker_id, job["id"])
@@ -401,6 +402,7 @@ def show_application_form(job, seeker_id: int):
 
         # Show success screen
         st.session_state["apply_stage"] = "success"
+        st.rerun()
 
 
 # Stage 3 Success Screen
@@ -409,11 +411,11 @@ def show_success_screen(job):
     Shown after a successful application submission.
     Gives the seeker clear next steps and a button back to the dashboard
     """
-    st.button()
+    st.balloons()
 
     # Centred success message
-    col1, col2, col3 = st.columns([1,2,1])
-    with col1:
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
         st.markdown(
             "<div style='text-align:center;padding:2rem 0'>"
             "<div style='font-size:64px'></div>"
@@ -441,11 +443,11 @@ def show_success_screen(job):
     col_a, col_b = st.columns(2)
     with col_a:
         if st.button(
-            "View My Applications",
-            use_container_width=True,
-            type="primary"
+                "View My Applications",
+                use_container_width=True,
+                type="primary"
         ):
-    # Clean up apply-related state and go to dashboard
+            # Clean up apply-related state and go to dashboard
             st.session_state["current_page"] = "seeker_dashboard"
             st.session_state.pop("selected_job_id", None)
             st.session_state.pop("apply_stage", None)
@@ -457,6 +459,7 @@ def show_success_screen(job):
             st.session_state.pop("selected_job_id", None)
             st.session_state.pop("apply_stage", None)
             st.rerun()
+
 
 # Main Function - called from app.py
 def show_apply_page():
@@ -473,7 +476,7 @@ def show_apply_page():
     seeker_id = st.session_state["user_id"]
 
     # Safety check - if no job was selected, send back to dashboard
-    job_id = st.session_state.get("Selected_job_id")
+    job_id = st.session_state.get("selected_job_id")
     if not job_id:
         st.warning("No job selected. Please choose a job from the job board.")
         if st.button("Back to Jobs"):
@@ -505,5 +508,3 @@ def show_apply_page():
 
     elif stage == "success":
         show_success_screen(job)
-
-

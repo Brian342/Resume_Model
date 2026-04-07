@@ -29,6 +29,7 @@ import bcrypt
 from db import get_user_by_email, create_user
 from employer_dashboard import show_employer_dashboard
 from seeker_dashboard import show_seeker_dashboard
+from apply import show_apply_page
 
 # Page Configuration
 st.set_page_config(
@@ -340,6 +341,9 @@ def main():
 
         elif page == "employer_dashboard":
             show_employer_dashboard()
+
+        elif page == "apply":
+            show_apply_page()
 
 
 # Entry Point
