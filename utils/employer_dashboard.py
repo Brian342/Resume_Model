@@ -295,21 +295,25 @@ def show_applicants_tab(employer_id):
                             type="primary"
                     ):
                         update_application_status(app_id, "approved")
+                        st.success("Application Approved")
 
                         # Send Congratulation email
                         if EMAIL_READY:
-                            job = [j for j in jobs if j["id"] == selected_job_id][0]
-                            success, msg = send_approval_email(
-                                to_email=seeker_email,
-                                to_name=seeker_name,
-                                job_title=job["title"],
-                                company=job["company"]
-                            )
-                            if success:
-                                st.success(f"Approved: Congratulations email sent to {seeker_email}")
+                            matched = [j for j in jobs if j["id"] == selected_job_id]
+                            if matched:
+                                job = matched[0]
+                                email_success, msg = send_approval_email(
+                                    to_email=seeker_email,
+                                    to_name=seeker_name,
+                                    job_title=job["title"],
+                                    company=job["company"]
+                                )
+                            if email_success:
+                                st.info(f"Congratulations email sent to {seeker_email}")
                             else:
-                                st.success("Approved!")
-                                st.warning(f"Email Failed: {msg}")
+                                st.warning(f"Approved but Email Failed: {msg}")
+                        else:
+                            st.info("Email not configured yet - approval Saved")
 
                         st.rerun()
 
@@ -319,21 +323,25 @@ def show_applicants_tab(employer_id):
                             use_container_width=True
                     ):
                         update_application_status(app_id, "rejected")
+                        st.warning("Application rejected")
 
-                        #Send Rejection email
+                        # Send Rejection email
                         if EMAIL_READY:
-                            job = [j for j in jobs if j["id"] == selected_job_id][0]
-                            success, msg = send_rejection_email(
-                                to_email=seeker_email,
-                                to_name=seeker_name,
-                                job_title=job["title"],
-                                company=job["company"]
+                            matched = [j for j in jobs if j["id"] == selected_job_id]
+                            if matched:
+                                job = matched[0]
+                                email_success, msg = send_rejection_email(
+                                    to_email=seeker_email,
+                                    to_name=seeker_name,
+                                    job_title=job["title"],
+                                    company=job["company"]
                             )
-                            if success:
-                                st.warning(f"Rejected. Notification sent to {seeker_email}.")
+                            if email_success:
+                                st.info(f"Rejected. Notification sent to {seeker_email}.")
                             else:
-                                st.warning(f"Rejected!")
-                                st.error(f"Email failed: {msg}")
+                                st.warning(f"Rejected! but Email failed: {msg}")
+                        else:
+                            st.info("Email ot configured yet - rejection saved")
 
                         st.rerun()
 
