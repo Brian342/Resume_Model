@@ -430,5 +430,5 @@ def test_email_connection():
         print(f"Sorry {message}")
 
 
-if __name__ == "__main__":
-    test_email_connection()
+# if __name__ == "__main__":
+#     test_email_connection()
