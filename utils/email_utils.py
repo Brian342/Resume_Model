@@ -47,11 +47,16 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 
 # Email Configuration
-
+# env_path = Path(__file__).resolve().parent.parent / '.env'
+# load_dotenv(dotenv_path=env_path)
 load_dotenv()
+
+print(f"DEBUG: SENDER_EMAIL from env is: {os.getenv('SENDER_EMAIL')}")
+print(f"DEBUG: Current Working Directory: {os.getcwd()}")
 
 EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "gmail")  # <- gmail| outlook| sendgrid
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")  # <- sending email
@@ -430,5 +435,5 @@ def test_email_connection():
         print(f"Sorry {message}")
 
 
-# if __name__ == "__main__":
-#     test_email_connection()
+if __name__ == "__main__":
+    test_email_connection()
