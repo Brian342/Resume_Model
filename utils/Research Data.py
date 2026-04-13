@@ -30,23 +30,22 @@ import pandas as pd
 # ──────────────────────────────────────────────────────────────────
 #  COLOUR PALETTE  (matches Pioneer Insurance blue theme)
 # ──────────────────────────────────────────────────────────────────
-BLUE   = "#1E2761"
-LBLUE  = "#4A90D9"
-GREEN  = "#2e7d32"
+BLUE = "#1E2761"
+LBLUE = "#4A90D9"
+GREEN = "#2e7d32"
 LGREEN = "#81c784"
-RED    = "#c62828"
-AMBER  = "#f9a825"
-GREY   = "#9e9e9e"
-BG     = "#F4F7FE"
+RED = "#c62828"
+AMBER = "#f9a825"
+GREY = "#9e9e9e"
+BG = "#F4F7FE"
 
 plt.rcParams.update({
     "figure.facecolor": BG,
-    "axes.facecolor":   BG,
-    "font.family":      "DejaVu Sans",
-    "axes.spines.top":  False,
-    "axes.spines.right":False,
+    "axes.facecolor": BG,
+    "font.family": "DejaVu Sans",
+    "axes.spines.top": False,
+    "axes.spines.right": False,
 })
-
 
 # ══════════════════════════════════════════════════════════════════
 #
@@ -96,38 +95,37 @@ CLOSED QUESTIONS (quantitative — used in charts below):
 # Responses for IQ-S6 — Job search duration (n=10)
 search_duration = {
     "Less than\n1 month": 1,
-    "1–3 months":         4,
-    "3–6 months":         3,
-    "Over 6 months":      2,
+    "1–3 months": 4,
+    "3–6 months": 3,
+    "Over 6 months": 2,
 }
 
 # Responses for IQ-S7 — Applications per week (n=10)
 apps_per_week = {
-    "1–2 apps":       2,
-    "3–5 apps":       4,
-    "6–10 apps":      3,
-    "More than 10":   1,
+    "1–2 apps": 2,
+    "3–5 apps": 4,
+    "6–10 apps": 3,
+    "More than 10": 1,
 }
 
 # Responses for IQ-S8 — Rejected without feedback (n=10)
 rejected_no_feedback = {
-    "Yes, always":     4,
-    "Yes, sometimes":  5,
-    "Rarely":          1,
-    "Never":           0,
+    "Yes, always": 4,
+    "Yes, sometimes": 5,
+    "Rarely": 1,
+    "Never": 0,
 }
 
 # Responses for IQ-S9 — Resume tailoring confidence (1–5 scale, n=10 ratings)
-tailoring_confidence = [2, 3, 3, 4, 2, 3, 4, 3, 2, 3]   # mean = 2.9
+tailoring_confidence = [2, 3, 3, 4, 2, 3, 4, 3, 2, 3]  # mean = 2.9
 
 # Responses for IQ-S10 — Would use automated scoring (n=10)
 use_auto_scoring = {
-    "Definitely Yes":  6,
-    "Probably Yes":    3,
-    "Not Sure":        1,
-    "No":              0,
+    "Definitely Yes": 6,
+    "Probably Yes": 3,
+    "Not Sure": 1,
+    "No": 0,
 }
-
 
 # ─────────────────────────────────────────────
 #  INTERVIEW: EMPLOYERS / HR RECRUITERS  (8 participants)
@@ -171,38 +169,37 @@ CLOSED QUESTIONS (quantitative):
 # Responses for IQ-E6 — Resumes per posting (n=8)
 resumes_per_posting = {
     "Less than 20": 1,
-    "20–50":        3,
-    "50–100":       3,
-    "Over 100":     1,
+    "20–50": 3,
+    "50–100": 3,
+    "Over 100": 1,
 }
 
 # Responses for IQ-E7 — Time to screen (n=8)
 screening_time = {
     "Less than 1 day": 1,
-    "1–3 days":        2,
-    "4–7 days":        3,
-    "Over 1 week":     2,
+    "1–3 days": 2,
+    "4–7 days": 3,
+    "Over 1 week": 2,
 }
 
 # Responses for IQ-E8 — % qualified (n=8)
 pct_qualified = {
     "Less than 10%": 2,
-    "10–25%":        4,
-    "26–50%":        2,
-    "Over 50%":      0,
+    "10–25%": 4,
+    "26–50%": 2,
+    "Over 50%": 0,
 }
 
 # Responses for IQ-E9 — Candidates drop out (n=8)
 candidate_dropout = {
-    "Very often":  3,
-    "Sometimes":   4,
-    "Rarely":      1,
-    "Never":       0,
+    "Very often": 3,
+    "Sometimes": 4,
+    "Rarely": 1,
+    "Never": 0,
 }
 
 # Responses for IQ-E10 — Screening confidence (1–5, n=8 ratings)
-screening_confidence = [3, 2, 3, 4, 2, 3, 2, 3]   # mean = 2.75
-
+screening_confidence = [3, 2, 3, 4, 2, 3, 2, 3]  # mean = 2.75
 
 # ══════════════════════════════════════════════════════════════════
 #
@@ -253,21 +250,20 @@ seeker_quest_means = [4.6, 4.2, 1.8, 1.9, 2.1, 3.8, 4.1, 3.9, 4.0, 4.5]
 # Distribution of responses for selected question QS-S1 (n=30)
 qs_s1_dist = {
     "1 – Strongly\nDisagree": 0,
-    "2 – Disagree":           1,
-    "3 – Neutral":            3,
-    "4 – Agree":             10,
-    "5 – Strongly\nAgree":   16,
+    "2 – Disagree": 1,
+    "3 – Neutral": 3,
+    "4 – Agree": 10,
+    "5 – Strongly\nAgree": 16,
 }
 
 # Distribution of responses for QS-S3 (feedback) — shows pain point
 qs_s3_dist = {
     "1 – Strongly\nDisagree": 12,
-    "2 – Disagree":           10,
-    "3 – Neutral":             5,
-    "4 – Agree":               2,
-    "5 – Strongly\nAgree":     1,
+    "2 – Disagree": 10,
+    "3 – Neutral": 5,
+    "4 – Agree": 2,
+    "5 – Strongly\nAgree": 1,
 }
-
 
 # ─────────────────────────────────────────────
 #  QUESTIONNAIRE: EMPLOYERS / HR  (n=20)
@@ -322,7 +318,7 @@ def save(filename):
 # ─────────────────────────────────────────────
 def chart_interview_seeker_duration():
     fig, ax = plt.subplots(figsize=(8, 5))
-    keys   = list(search_duration.keys())
+    keys = list(search_duration.keys())
     values = list(search_duration.values())
     colors = [LBLUE if v < max(values) else BLUE for v in values]
     bars = ax.bar(keys, values, color=colors, edgecolor="white", width=0.5)
@@ -331,7 +327,7 @@ def chart_interview_seeker_duration():
     ax.set_ylabel("Number of Respondents", fontsize=11)
     ax.set_ylim(0, max(values) + 1.5)
     for bar, v in zip(bars, values):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.1,
                 str(v), ha="center", va="bottom", fontweight="bold", fontsize=12)
     ax.tick_params(axis="x", labelsize=10)
     fig.tight_layout()
@@ -344,12 +340,12 @@ def chart_interview_seeker_duration():
 def chart_interview_seeker_auto():
     fig, ax = plt.subplots(figsize=(7, 7))
     labels = list(use_auto_scoring.keys())
-    sizes  = list(use_auto_scoring.values())
+    sizes = list(use_auto_scoring.values())
     colors = [GREEN, LGREEN, AMBER, RED]
     explode = (0.06, 0, 0, 0)
     wedges, texts, autotexts = ax.pie(
         sizes, labels=labels, colors=colors, explode=explode,
-        autopct=lambda p: f"{p:.0f}%\n({int(round(p*sum(sizes)/100))})",
+        autopct=lambda p: f"{p:.0f}%\n({int(round(p * sum(sizes) / 100))})",
         startangle=140, textprops={"fontsize": 11},
         wedgeprops={"edgecolor": "white", "linewidth": 2}
     )
@@ -366,11 +362,11 @@ def chart_interview_seeker_auto():
 # ─────────────────────────────────────────────
 def chart_interview_employer_screening_time():
     fig, ax = plt.subplots(figsize=(8, 5))
-    keys   = list(screening_time.keys())
+    keys = list(screening_time.keys())
     values = list(screening_time.values())
-    y      = range(len(keys))
+    y = range(len(keys))
     colors = [RED if v == max(values) else LBLUE for v in values]
-    bars   = ax.barh(list(y), values, color=colors, edgecolor="white", height=0.5)
+    bars = ax.barh(list(y), values, color=colors, edgecolor="white", height=0.5)
     ax.set_yticks(list(y))
     ax.set_yticklabels(keys, fontsize=11)
     ax.set_xlabel("Number of Respondents", fontsize=11)
@@ -378,7 +374,7 @@ def chart_interview_employer_screening_time():
     ax.set_title("IQ-E7: How long does it take to screen all applications?\n(Interview Responses, n=8)",
                  fontsize=13, fontweight="bold", color=BLUE, pad=14)
     for bar, v in zip(bars, values):
-        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height()/2,
+        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height() / 2,
                 str(v), va="center", fontweight="bold", fontsize=12)
     fig.tight_layout()
     save("chart3_interview_employer_screening_time.png")
@@ -390,11 +386,11 @@ def chart_interview_employer_screening_time():
 def chart_interview_employer_qualified():
     fig, ax = plt.subplots(figsize=(7, 7))
     labels = list(pct_qualified.keys())
-    sizes  = list(pct_qualified.values())
+    sizes = list(pct_qualified.values())
     colors = [RED, AMBER, LGREEN, GREEN]
     wedges, texts, autotexts = ax.pie(
         sizes, labels=labels, colors=colors,
-        autopct=lambda p: f"{p:.0f}%\n({int(round(p*sum(sizes)/100))})" if p > 0 else "",
+        autopct=lambda p: f"{p:.0f}%\n({int(round(p * sum(sizes) / 100))})" if p > 0 else "",
         startangle=90,
         wedgeprops={"edgecolor": "white", "linewidth": 2, "width": 0.6},
         textprops={"fontsize": 11}
@@ -415,27 +411,27 @@ def chart_interview_employer_qualified():
 # ─────────────────────────────────────────────
 def chart_quest_seeker_means():
     fig, ax = plt.subplots(figsize=(10, 7))
-    y      = range(len(seeker_quest_labels))
+    y = range(len(seeker_quest_labels))
     colors = [BLUE if m >= 3.5 else (AMBER if m >= 2.5 else RED)
               for m in seeker_quest_means]
-    bars   = ax.barh(list(y), seeker_quest_means,
-                     color=colors, edgecolor="white", height=0.6)
+    bars = ax.barh(list(y), seeker_quest_means,
+                   color=colors, edgecolor="white", height=0.6)
     ax.set_yticks(list(y))
     ax.set_yticklabels(seeker_quest_labels, fontsize=9)
     ax.set_xlabel("Mean Score  (1 = Strongly Disagree → 5 = Strongly Agree)", fontsize=10)
     ax.set_xlim(0, 5.5)
     ax.axvline(x=3, color=GREY, linestyle="--", linewidth=1, label="Neutral (3.0)")
     for bar, v in zip(bars, seeker_quest_means):
-        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height()/2,
+        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height() / 2,
                 f"{v:.1f}", va="center", fontweight="bold", fontsize=10)
     ax.set_title("Questionnaire — Job Seekers: Mean Likert Responses\n(n=30, Scale 1–5)",
                  fontsize=13, fontweight="bold", color=BLUE, pad=14)
     ax.legend(fontsize=9)
     # colour legend
     patches = [
-        mpatches.Patch(color=BLUE,  label="Mean ≥ 3.5 (Agreement)"),
+        mpatches.Patch(color=BLUE, label="Mean ≥ 3.5 (Agreement)"),
         mpatches.Patch(color=AMBER, label="Mean 2.5–3.4 (Neutral)"),
-        mpatches.Patch(color=RED,   label="Mean < 2.5 (Disagreement)"),
+        mpatches.Patch(color=RED, label="Mean < 2.5 (Disagreement)"),
     ]
     ax.legend(handles=patches, loc="lower right", fontsize=9)
     fig.tight_layout()
@@ -447,25 +443,25 @@ def chart_quest_seeker_means():
 # ─────────────────────────────────────────────
 def chart_quest_employer_means():
     fig, ax = plt.subplots(figsize=(10, 7))
-    y      = range(len(employer_quest_labels))
+    y = range(len(employer_quest_labels))
     colors = [BLUE if m >= 3.5 else (AMBER if m >= 2.5 else RED)
               for m in employer_quest_means]
-    bars   = ax.barh(list(y), employer_quest_means,
-                     color=colors, edgecolor="white", height=0.6)
+    bars = ax.barh(list(y), employer_quest_means,
+                   color=colors, edgecolor="white", height=0.6)
     ax.set_yticks(list(y))
     ax.set_yticklabels(employer_quest_labels, fontsize=9)
     ax.set_xlabel("Mean Score  (1 = Strongly Disagree → 5 = Strongly Agree)", fontsize=10)
     ax.set_xlim(0, 5.5)
     ax.axvline(x=3, color=GREY, linestyle="--", linewidth=1)
     for bar, v in zip(bars, employer_quest_means):
-        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height()/2,
+        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height() / 2,
                 f"{v:.1f}", va="center", fontweight="bold", fontsize=10)
     ax.set_title("Questionnaire — Employers / HR: Mean Likert Responses\n(n=20, Scale 1–5)",
                  fontsize=13, fontweight="bold", color=BLUE, pad=14)
     patches = [
-        mpatches.Patch(color=BLUE,  label="Mean ≥ 3.5 (Agreement)"),
+        mpatches.Patch(color=BLUE, label="Mean ≥ 3.5 (Agreement)"),
         mpatches.Patch(color=AMBER, label="Mean 2.5–3.4 (Neutral)"),
-        mpatches.Patch(color=RED,   label="Mean < 2.5 (Disagreement)"),
+        mpatches.Patch(color=RED, label="Mean < 2.5 (Disagreement)"),
     ]
     ax.legend(handles=patches, loc="lower right", fontsize=9)
     fig.tight_layout()
@@ -478,9 +474,9 @@ def chart_quest_employer_means():
 def chart_qs_s1_distribution():
     fig, ax = plt.subplots(figsize=(9, 5))
     labels = list(qs_s1_dist.keys())
-    vals   = list(qs_s1_dist.values())
+    vals = list(qs_s1_dist.values())
     colors = [RED, "#ef5350", AMBER, LGREEN, GREEN]
-    bars   = ax.bar(labels, vals, color=colors, edgecolor="white", width=0.55)
+    bars = ax.bar(labels, vals, color=colors, edgecolor="white", width=0.55)
     ax.set_title("QS-S1: 'The current job application process is time-consuming'\n"
                  "(Questionnaire Response Distribution, n=30)",
                  fontsize=12, fontweight="bold", color=BLUE, pad=14)
@@ -488,7 +484,7 @@ def chart_qs_s1_distribution():
     ax.set_ylim(0, max(vals) + 3)
     for bar, v in zip(bars, vals):
         if v > 0:
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.2,
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.2,
                     str(v), ha="center", fontweight="bold", fontsize=13)
     ax.tick_params(axis="x", labelsize=9)
     fig.tight_layout()
@@ -501,9 +497,9 @@ def chart_qs_s1_distribution():
 def chart_qs_s3_distribution():
     fig, ax = plt.subplots(figsize=(9, 5))
     labels = list(qs_s3_dist.keys())
-    vals   = list(qs_s3_dist.values())
+    vals = list(qs_s3_dist.values())
     colors = [RED, "#ef5350", AMBER, LGREEN, GREEN]
-    bars   = ax.bar(labels, vals, color=colors, edgecolor="white", width=0.55)
+    bars = ax.bar(labels, vals, color=colors, edgecolor="white", width=0.55)
     ax.set_title("QS-S3: 'I receive timely feedback after submitting applications'\n"
                  "(Questionnaire Response Distribution, n=30) — KEY PAIN POINT",
                  fontsize=12, fontweight="bold", color=RED, pad=14)
@@ -511,7 +507,7 @@ def chart_qs_s3_distribution():
     ax.set_ylim(0, max(vals) + 3)
     for bar, v in zip(bars, vals):
         if v > 0:
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.2,
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.2,
                     str(v), ha="center", fontweight="bold", fontsize=13)
     ax.tick_params(axis="x", labelsize=9)
     # annotation arrow
@@ -531,9 +527,9 @@ def chart_combined_summary():
 
     # Left: Seeker top 5 pain points
     ax = axes[0]
-    items  = ["Process is\ntime-consuming", "Difficult to\nmatch resume",
-              "Timely feedback\nnot received", "Rejection reason\nunknown",
-              "Would use\nAI scoring"]
+    items = ["Process is\ntime-consuming", "Difficult to\nmatch resume",
+             "Timely feedback\nnot received", "Rejection reason\nunknown",
+             "Would use\nAI scoring"]
     scores = [4.6, 4.2, 1.8, 1.9, 3.8]
     colors = [BLUE, BLUE, RED, RED, GREEN]
     y = range(len(items))
@@ -550,9 +546,9 @@ def chart_combined_summary():
 
     # Right: Employer top 5 findings
     ax2 = axes[1]
-    items2  = ["Screening takes\ntoo much time", "Miss good\ncandidates",
-               "AI saves time", "Dashboard helps\nprioritise",
-               "Concerned about\nAI bias"]
+    items2 = ["Screening takes\ntoo much time", "Miss good\ncandidates",
+              "AI saves time", "Dashboard helps\nprioritise",
+              "Concerned about\nAI bias"]
     scores2 = [4.5, 4.0, 4.6, 4.5, 3.7]
     colors2 = [RED, RED, GREEN, GREEN, AMBER]
     y2 = range(len(items2))
@@ -568,8 +564,8 @@ def chart_combined_summary():
         ax2.text(v + 0.05, i, f"{v}", va="center", fontweight="bold", fontsize=10)
 
     patches = [
-        mpatches.Patch(color=BLUE,  label="Pain point (high agreement)"),
-        mpatches.Patch(color=RED,   label="Critical gap / problem"),
+        mpatches.Patch(color=BLUE, label="Pain point (high agreement)"),
+        mpatches.Patch(color=RED, label="Critical gap / problem"),
         mpatches.Patch(color=GREEN, label="System benefit agreed"),
         mpatches.Patch(color=AMBER, label="Neutral / concern"),
     ]
@@ -587,14 +583,14 @@ def chart_combined_summary():
 # ══════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     print("\nGenerating all Chapter 3 research charts...\n")
-    chart_interview_seeker_duration()          # Chart 1
-    chart_interview_seeker_auto()             # Chart 2
-    chart_interview_employer_screening_time() # Chart 3
-    chart_interview_employer_qualified()      # Chart 4
-    chart_quest_seeker_means()               # Chart 5
-    chart_quest_employer_means()             # Chart 6
-    chart_qs_s1_distribution()              # Chart 7
-    chart_qs_s3_distribution()              # Chart 8
-    chart_combined_summary()                # Chart 9
+    chart_interview_seeker_duration()  # Chart 1
+    chart_interview_seeker_auto()  # Chart 2
+    chart_interview_employer_screening_time()  # Chart 3
+    chart_interview_employer_qualified()  # Chart 4
+    chart_quest_seeker_means()  # Chart 5
+    chart_quest_employer_means()  # Chart 6
+    chart_qs_s1_distribution()  # Chart 7
+    chart_qs_s3_distribution()  # Chart 8
+    chart_combined_summary()  # Chart 9
     print("\nAll 9 charts saved to current folder.")
     print("Use them in Chapter 3 sections 3.4.1 and 3.4.2")
