@@ -79,7 +79,7 @@ SMTP_SETTINGS = {
 # Company branding - appears in email headers and footer
 COMPANY_EMAIL = SENDER_EMAIL
 
-
+# this is a comment
 # Core Email Sender
 
 def send_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
