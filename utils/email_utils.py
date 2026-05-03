@@ -79,6 +79,7 @@ SMTP_SETTINGS = {
 # Company branding - appears in email headers and footer
 COMPANY_EMAIL = SENDER_EMAIL
 
+
 # this is a comment
 # Core Email Sender
 
