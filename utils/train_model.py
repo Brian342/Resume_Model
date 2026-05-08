@@ -81,3 +81,69 @@ CATEGORICAL_COLUMNS = [
     "Certifications",
     "Job Role"
 ]
+
+
+# LOAD DATA
+def load_data(path: str) -> pd.DataFrame:
+    """
+    Loads the CSV and does basic cleaning.
+    Prints a summary so you can verify it loaded correctly
+    """
+    print("=" * 60)
+    print("STEP 1: Loading Dataset")
+    print("=" * 60)
+
+    df = pd.read_csv(path)
+
+    print(f"Rows Loaded :{len(df)}")
+    print(f"Columns :{list(df.columns)}")
+    print()
+
+    # Check for missing Values
+    missing = df.isnull().sum()
+    if missing.any():
+        print(" Missing Values Found:")
+        print(missing[missing > 0])
+        # Fill missing text with empty string numeric with 0
+        df["Skills"] = df["Skills"].fillna("")
+        df["Certifications"] = df["Certifications"].fillna("None")
+    else:
+        print("No Missing Values Found")
+
+    # Show Class distribution
+    dist = df[TARGET_COLUMN].value_counts()
+    print()
+    print(f"Target distribution ({TARGET_COLUMN}):")
+    for label, count in dist.items():
+        pct = count / len(df) * 100
+        print(f"{label:10s}: {count:4d} ({pct:.1f}%)")
+
+    print()
+    return df
+
+
+# Step 2 - Feature Engineering
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Creates additional features from the raw data
+
+    Why Feature Engineering?
+    The raw Skills column is a comma-separated string like
+    "Python, TensorFlow, NLP", We want to extract signals
+    from the data that the model can learn from
+    """
+    print("=" * 60)
+    print("STEP 2: Feature Engineering")
+    print("=" * 60)
+
+    df = df.copy()
+
+    # Count how many skills the candidate has
+    # "Python, TensorFlow, NLP" ->3
+    df["skill_count"] = df["skills"].apply(
+        lambda x: len([s.strip() for s in x.split(",") if s.strip()])
+    )
+    print(f"skill_count range: {df['skill_count'].min()} - {df['skill_count'].max()}")
+
+    # Flag for having a certification (vs "None")
+    df["has_certification"] = (df[])
