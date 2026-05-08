@@ -58,5 +58,26 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from scipy.sparse import hstack
 
 # Config
-DATASET_PATH = "/Resume_Screening/AI_Resume_Screening.csv"
-MODEL_PATH = "resume_model.pkl"
+DATASET_PATH = "/Resume_Screening/AI_Resume_Screening.csv"  # path to your csv file
+MODEL_PATH = "resume_model.pkl"  # Where to save the trained model
+ENCODER_PATH = "label_encoder.pkl"  # Where to save encoders
+
+# The column we are trying to predict
+TARGET_COLUMN = "Recruiter Decision"
+
+# Text column - this is TF-IDF Vectorized
+TEXT_COLUMN = "Skills"
+
+# Numerical Columns - used as-is
+NUMERICAL_COLUMNS = [
+    "Experience (Years)",
+    "Projects Count",
+    "AI Score (0-100)"  # The dataset already has an AI score - great feature:
+]
+
+# Category Columns - one-hot encoded
+CATEGORICAL_COLUMNS = [
+    "Education",
+    "Certifications",
+    "Job Role"
+]
