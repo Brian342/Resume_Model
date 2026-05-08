@@ -399,6 +399,7 @@ def save_model(clf, tfidf, numeric_columns: list):
     print(f"Model saved to : {MODEL_PATH} ({size_kb:.1f} KB")
     print()
 
+
 # Predict Function
 def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
     """
@@ -438,4 +439,90 @@ def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
     edu_level = edu_rank.get(education, 2)
     is_experienced = int(experience_years >= 5)
 
+    # Rough AI score estimate from features (Since we won't have the real one)
+
+    # Experience heavily weighted, then skills, projects
+    rough_ai_score = min(100, (
+            experience_years * 6 +
+            skill_count * 5 +
+            projects_count * 4 +
+            edu_level * 3 +
+            has_cert * 10
+    ))
+    high_ai_score = int(rough_ai_score >= 70)
+
+    # Build numeric feature vector in the SAME order as training
+    # We use the numeric_columns list saved with the model
+    numeric_cols = model_bundle["numeric_columns"]
+    cat_cols = model_bundle["categorical_cols"]
+
+    # One-hot encode categorical values
+    # We replicate what pd.get_dummies did during training
+    cat_values = {}
+    for col in cat_cols:
+        prefix = col
+        val = resume_data.get(col.lower().replace(" ", "_"), "")
+        cat_values[f"{prefix}_{val}"] = 1
+
+    # Build the full numeric row in column order
+    base_numeric = {
+        "Experience (Years)": experience_years,
+        "Projects Count": projects_count,
+        "AI Score (0-100)": rough_ai_score,
+        "skill_count": skill_count,
+        "has_certification": has_cert,
+        "education_rank": edu_level,
+        "is_experienced": is_experienced,
+        "high_ai_score": high_ai_score,
+    }
+
+    row = []
+    for col in numeric_cols:
+        if col in base_numeric:
+            row.append(base_numeric[col])
+        else:
+            # One-hot column - 1 if matches, 0 otherwise
+            row.append(float(cat_values.get(col, 0)))
+
+    # Transform skills text with the fitted TF-IDF
+    text_vec = tfidf.transform([skills])
+
+    # Combine
+    X = hstack([text_vec, csr_matrix([row])])
+
+    # Predict probability of Hire (class 1)
+    proba = clf.predict_proba(X)[0][1] # Probability of "Hire"
+
+    # Convert probability to 0-100 score
+    score = round(proba * 100, 1)
+
+    # Map to label
+    if score >= 65:
+        label = "Qualified"
+    elif score >= 40:
+        label = "Review Needed"
+    else:
+        label = "Not Qualified"
+
+    return score, label
+
+# Main Pipeline
+if __name__ == "__main__":
+    print()
+    print("Resume Screening ML Training Pipeline")
+    print()
+
+    # Load
+    df = load_data(DATASET_PATH)
+
+    # Engineer Features
+    df = engineer_features(df)
+
+    # Prepare X and Y
+    X_text, X_numeric, y, numeric_cols = prepare_features(df)
+
+    # Train
+    clf, tfidf, X_train, X_test, y_train, y_test = train_model(
+        X_text, X_numeric, y
+    )
 
