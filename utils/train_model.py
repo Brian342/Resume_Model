@@ -339,8 +339,8 @@ def evaluate_model(clf, X_train, X_test, y_train, y_test):
     train_acc = accuracy_score(y_train, y_pred_train)
     test_acc = accuracy_score(y_test, y_pred_test)
 
-    print(f"Train accuracy :{train_acc:.4f} ({train_acc*100:.1f}%)")
-    print(f"Test accuracy :{test_acc:.4f} ({test_acc*100:.1f}%)")
+    print(f"Train accuracy :{train_acc:.4f} ({train_acc * 100:.1f}%)")
+    print(f"Test accuracy :{test_acc:.4f} ({test_acc * 100:.1f}%)")
 
     if train_acc - test_acc > .1:
         print("Possible Overfitting - Train much higher test")
@@ -355,4 +355,87 @@ def evaluate_model(clf, X_train, X_test, y_train, y_test):
     ))
 
     print("Confusion Matrix:")
+    cm = confusion_matrix(y_test, y_pred_test)
+    print(f"                Predicted Reject Predicted Hire")
+    print(f"Actual Reject   {cm[0][0]:3d}    {cm[0][1]:3d}")
+    print(f"Actual Hire     {cm[1][0]:3d}    {cm[1][1]:3d}")
+    print()
+
+
+# Save Model
+def save_model(clf, tfidf, numeric_columns: list):
+    """
+    Saves everything needed for inference into one .pkl file.
+
+    We save a dict containing:
+      clf             → the trained classifier
+      tfidf           → the fitted TF-IDF vectorizer
+      numeric_columns → column names (to build features consistently)
+      edu_rank        → the education ranking dict
+      label_map       → maps 1→Hire, 0→Reject back to strings
+
+    WHY SAVE AS A DICT (not just the model)?
+      When predicting on a new resume, we need the SAME tfidf vectorizer
+      that was fitted during training. If we only saved clf, we couldn't
+      transform new text. Saving everything together keeps it simple.
+    """
+    print("=" * 60)
+    print("STEP 6: Saving model")
+    print("=" * 60)
+
+    model_bundle = {
+        "clf": clf,
+        "tfidf": tfidf,
+        "numeric_columns": numeric_columns,
+        "edu_rank": {
+            "B.Sc": 1, "B.Tech": 2, "MBA": 3, "M.Tech": 4, "PhD": 5
+        },
+        "label_map": {1: "Hire", 0: "Reject"},
+        "categorical_cols": CATEGORICAL_COLUMNS,
+    }
+
+    joblib.dump(model_bundle, MODEL_PATH)
+    size_kb = os.path.getsize(MODEL_PATH) / 1024
+    print(f"Model saved to : {MODEL_PATH} ({size_kb:.1f} KB")
+    print()
+
+# Predict Function
+def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
+    """
+        Predicts Hire/Reject and a 0-100 score for a single resume.
+
+        This is the function that score_resume() in apply.py will call.
+
+        resume_data dict keys:
+          skills          : str  — "Python, Machine Learning, SQL"
+          experience_years: int  — years of experience
+          education       : str  — "B.Sc" | "B.Tech" | "MBA" | "M.Tech" | "PhD"
+          certifications  : str  — "None" | "AWS Certified" | "Google ML" | etc.
+          job_role        : str  — "Data Scientist" | "Software Engineer" | etc.
+          projects_count  : int  — number of projects
+
+        Returns:
+          score (float) : 0-100 match score
+          label (str)   : "Qualified" | "Not Qualified" | "Review Needed"
+        """
+    from scipy.sparse import hstack, csr_matrix
+
+    clf = model_bundle["clf"]
+    tfidf = model_bundle["tfidf"]
+    edu_rank = model_bundle["edu_rank"]
+
+    skills = resume_data.get("skills", "")
+    experience_years = int(resume_data.get("experience_years", 0))
+    education = resume_data.get("education", "B.Sc")
+    certifications = resume_data.get("certifications", "None")
+    job_role = resume_data.get("job_role", "")
+    projects_count = int(resume_data.get("projects_count", 0))
+
+    # Replicate the same feature engineering from training
+    skill_list = [s.strip() for s in skills.split(",") if s.strip()]
+    skill_count = len(skill_list)
+    has_cert = int(certifications := "None")
+    edu_level = edu_rank.get(education, 2)
+    is_experienced = int(experience_years >= 5)
+
 
