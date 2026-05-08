@@ -51,27 +51,34 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # AI SCORE PLACEHOLDER
-def score_resume(resume_text: str, job_description: str, job_requirements: str):
+def score_resume(resume_text, job_description, job_requirements):
+    import joblib
+    _model = joblib.load("resume_model.pkl")
     """
-    PLACEHOLDER - Replace this with your ML model
+      PLACEHOLDER - Replace this with your ML model
 
-    This function receives:
-        resume_text: raw text extracted from the PDF
-        job_description: the job's description from the database
-        job_requirements: the job's requirements from the database
+      This function receives:
+          resume_text: raw text extracted from the PDF
+          job_description: the job's description from the database
+          job_requirements: the job's requirements from the database
 
-    It should return:
-        score (float): 0 to 100 match score
-        label (str): "Qualified", "Not Qualified", or "Review Needed"
+      It should return:
+          score (float): 0 to 100 match score
+          label (str): "Qualified", "Not Qualified", or "Review Needed"
 
-    Returns a fixed placeholder so the rest of the
-    system works end-to-end while you build the ML model.
-    """
-    # Replace These two Lines with model
-    score = .0  # returns a float between 0 and 100
-    label = "Pending ML scoring"
-
-    return score, label
+      Returns a fixed placeholder so the rest of the
+      system works end-to-end while you build the ML model.
+      """
+    from train_model import predict_single
+    resume_data = {
+        "skills": resume_text,
+        "experience_years": 0,  # extract from form answers
+        "education": "B.Sc",
+        "certifications": "None",
+        "job_role": "",
+        "projects_count": 0,
+    }
+    return predict_single(_model, resume_data)
 
 
 # PDF Text Extractor

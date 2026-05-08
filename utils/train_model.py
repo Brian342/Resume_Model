@@ -58,7 +58,8 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from scipy.sparse import hstack
 
 # Config
-DATASET_PATH = "/Users/briankimanzi/Documents/programmingLanguages/PythonProgramming/Resume_Screening/AI_Resume_Screening.csv"  # path to your csv file
+DATASET_PATH = ("/Users/briankimanzi/Documents/programmingLanguages/PythonProgramming/Resume_Screening"
+                "/AI_Resume_Screening.csv")  # path to your csv file
 MODEL_PATH = "resume_model.pkl"  # Where to save the trained model
 ENCODER_PATH = "label_encoder.pkl"  # Where to save encoders
 
@@ -140,7 +141,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # Count how many skills the candidate has
     # "Python, TensorFlow, NLP" ->3
-    df["skill_count"] = df["skills"].apply(
+    df["skill_count"] = df["Skills"].apply(
         lambda x: len([s.strip() for s in x.split(",") if s.strip()])
     )
     print(f"skill_count range: {df['skill_count'].min()} - {df['skill_count'].max()}")
@@ -162,7 +163,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     print(f"education_rank: mapped {len(edu_rank)} levels")
 
     # Is the candidate experienced? (5+ years)
-    df["is_experienced"] = (df["Experience (years)"].astype(int) >= 5).astype(int)
+    df["is_experienced"] = (df["Experience (Years)"].astype(int) >= 5).astype(int)
 
     # High AI Score flag (the dataset's own Scoring)
     df["high_ai_score"] = (df["AI Score (0-100)"].astype(int) >= 70).astype(int)
@@ -302,7 +303,7 @@ def train_model(X_text, X_numeric, y):
     clf = LogisticRegression(
         class_weight="balanced",  # handles Hire/Reject imbalance automatically
         max_iter=1000,  # enough iterations to converge
-        c=1.0,  # regularization strength (1.0 = default)
+        C=1.0,  # regularization strength (1.0 = default)
         random_state=42
     )
     clf.fit(X_train_combined, y_train)
@@ -312,7 +313,7 @@ def train_model(X_text, X_numeric, y):
     return clf, tfidf, X_train_combined, X_test_combined, y_train, y_test
 
 
-# Evaluate
+# STEP 5 — EVALUATE
 def evaluate_model(clf, X_train, X_test, y_train, y_test):
     """
     Prints a full evaluation report:
@@ -362,7 +363,7 @@ def evaluate_model(clf, X_train, X_test, y_train, y_test):
     print()
 
 
-# Save Model
+# STEP 6 — SAVE MODEL
 def save_model(clf, tfidf, numeric_columns: list):
     """
     Saves everything needed for inference into one .pkl file.
@@ -400,7 +401,7 @@ def save_model(clf, tfidf, numeric_columns: list):
     print()
 
 
-# Predict Function
+# STEP 7 — PREDICT FUNCTION
 def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
     """
         Predicts Hire/Reject and a 0-100 score for a single resume.
@@ -435,7 +436,7 @@ def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
     # Replicate the same feature engineering from training
     skill_list = [s.strip() for s in skills.split(",") if s.strip()]
     skill_count = len(skill_list)
-    has_cert = int(certifications := "None")
+    has_cert = int(certifications != "None")
     edu_level = edu_rank.get(education, 2)
     is_experienced = int(experience_years >= 5)
 
@@ -491,7 +492,7 @@ def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
     X = hstack([text_vec, csr_matrix([row])])
 
     # Predict probability of Hire (class 1)
-    proba = clf.predict_proba(X)[0][1] # Probability of "Hire"
+    proba = clf.predict_proba(X)[0][1]  # Probability of "Hire"
 
     # Convert probability to 0-100 score
     score = round(proba * 100, 1)
@@ -505,6 +506,7 @@ def predict_single(model_bundle: dict, resume_data: dict) -> tuple:
         label = "Not Qualified"
 
     return score, label
+
 
 # Main Pipeline
 if __name__ == "__main__":
@@ -533,7 +535,7 @@ if __name__ == "__main__":
     save_model(clf, tfidf, numeric_cols)
 
     # Quick sanity test on a sample resume
-    print("=" *60)
+    print("=" * 60)
     print("STEP 7: Sanity check - predicting on a sample resume")
     print("=" * 60)
 
@@ -592,4 +594,3 @@ if __name__ == "__main__":
             }
             return predict_single(_model, resume_data)
         """)
-
