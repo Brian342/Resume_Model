@@ -269,3 +269,46 @@ def train_model(X_text, X_numeric, y):
     # max_features limits vocabulary size for speed
     # min_df=2 ignores words that appear in fewer than 2 resumes
 
+    tfidf = TfidfVectorizer(
+        ngram_range=(1, 2),
+        max_features=500,
+        min_df=2,
+        strip_accents="unicode",
+        lowercase=True
+    )
+
+    # Fit on training data only - Never fit on test data
+    # This prevents "data leakage" - the model shouldn't know test vocabulary
+    X_text_train_vec = tfidf.fit_transform(X_text_train)
+    X_text_test_vec = tfidf.transform(X_text_test)  # only transform, not fit
+
+    # Combine TF-IDF + numeric features
+    # hstack stacks sparse matrices side by side horizontally
+    # Result shape: (n_samples, tfidf_features + numeric_features)
+    from scipy.sparse import hstack, csr_matrix
+    X_train_combined = hstack([
+        X_text_train_vec,
+        csr_matrix(X_num_train.values.astype(float))
+    ])
+    X_test_combined = hstack([
+        X_text_test_vec,
+        csr_matrix(X_num_test.values.astype(float))
+    ])
+
+    print(f"fCombined features matrix shape: {X_train_combined.shape}")
+
+    # Train Logistic Regression
+    print("Training Logistic Regression...")
+    clf = LogisticRegression(
+        class_weight="balanced",  # handles Hire/Reject imbalance automatically
+        max_iter=1000,  # enough iterations to converge
+        c=1.0,  # regularization strength (1.0 = default)
+        random_state=42
+    )
+    clf.fit(X_train_combined, y_train)
+    print("Training complete")
+    print()
+
+    return clf, tfidf, X_train_combined, X_test_combined, y_train, y_test
+
+
