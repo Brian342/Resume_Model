@@ -526,3 +526,70 @@ if __name__ == "__main__":
         X_text, X_numeric, y
     )
 
+    # Evaluate
+    evaluate_model(clf, X_train, X_test, y_train, y_test)
+
+    # Save
+    save_model(clf, tfidf, numeric_cols)
+
+    # Quick sanity test on a sample resume
+    print("=" *60)
+    print("STEP 7: Sanity check - predicting on a sample resume")
+    print("=" * 60)
+
+    model_bundle = joblib.load(MODEL_PATH)
+
+    sample_resume = {
+        "skills": "Python, Machine Learning, TensorFlow, SQL",
+        "experience_years": 5,
+        "education": "M.Tech",
+        "certifications": "Google ML",
+        "job_role": "Data Scientist",
+        "projects_count": 4,
+
+    }
+
+    score, label = predict_single(model_bundle, sample_resume)
+    print(f"  Sample resume  : {sample_resume['skills']}")
+    print(f"  Experience     : {sample_resume['experience_years']} years")
+    print(f"  Education      : {sample_resume['education']}")
+    print(f"  Predicted score: {score}/100")
+    print(f"  Predicted label: {label}")
+    print()
+
+    sample_weak = {
+        "skills": "Excel, PowerPoint",
+        "experience_years": 0,
+        "education": "B.Sc",
+        "certifications": "None",
+        "job_role": "Data Scientist",
+        "projects_count": 0,
+    }
+    score2, label2 = predict_single(model_bundle, sample_weak)
+    print(f"  Weak resume    : {sample_weak['skills']}")
+    print(f"  Experience     : {sample_weak['experience_years']} years")
+    print(f"  Predicted score: {score2}/100")
+    print(f"  Predicted label: {label2}")
+    print()
+    print("Training pipeline complete!")
+    print(f"   Model saved to: {MODEL_PATH}")
+    print(f"   Wire it into apply.py using the instructions below.")
+    print()
+    print("NEXT STEP — in apply.py, replace score_resume() with:")
+    print("""
+        import joblib
+        _model = joblib.load("resume_model.pkl")
+
+        def score_resume(resume_text, job_description, job_requirements):
+            from train_model import predict_single
+            resume_data = {
+                "skills"           : resume_text,
+                "experience_years" : 0,   # extract from form answers
+                "education"        : "B.Sc",
+                "certifications"   : "None",
+                "job_role"         : "",
+                "projects_count"   : 0,
+            }
+            return predict_single(_model, resume_data)
+        """)
+
