@@ -245,3 +245,6 @@ def train_model(X_text, X_numeric, y):
 
     Returns the trained model components.
     """
+    print("=" * 60)
+    print("STEP 4: Training model")
+    print("=" * 60)
