@@ -248,3 +248,24 @@ def train_model(X_text, X_numeric, y):
     print("=" * 60)
     print("STEP 4: Training model")
     print("=" * 60)
+
+    # split into train (80%) and test (20%) sets
+    # stratify=y ensures bot sets have the same Hire/Reject ratio
+    (X_text_train, X_text_test,
+     X_num_train, X_num_test,
+     y_train, y_test) = train_test_split(
+        X_text, X_numeric, y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y  # Keeps class ratio the same in bth splits
+    )
+    print(f"Training Set : {len(y_train)} samples")
+    print(f"Test set :{len(y_test)} samples")
+    print()
+
+    # ── TF-IDF Vectorizer ────────────────────────────────────────────────────
+    # ngram_range=(1,2) means we look at single words AND pairs:
+    #   "Python" (unigram) and "Machine Learning" (bigram)
+    # max_features limits vocabulary size for speed
+    # min_df=2 ignores words that appear in fewer than 2 resumes
+
