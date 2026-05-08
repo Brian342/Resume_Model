@@ -312,3 +312,47 @@ def train_model(X_text, X_numeric, y):
     return clf, tfidf, X_train_combined, X_test_combined, y_train, y_test
 
 
+# Evaluate
+def evaluate_model(clf, X_train, X_test, y_train, y_test):
+    """
+    Prints a full evaluation report:
+      - Train vs test accuracy (to detect overfitting)
+      - Precision, Recall, F1-score per class
+      - Confusion matrix
+
+    WHAT THESE METRICS MEAN:
+      Precision : of all predicted "Hire", what % were actually Hire?
+      Recall    : of all actual "Hire", what % did we correctly predict?
+      F1-score  : harmonic mean of precision + recall (best single metric)
+      Confusion Matrix:
+            Predicted Reject | Predicted Hire
+        Actual Reject  [TN]  |  [FP]   ← False Positives (rejected but predicted hire)
+        Actual Hire    [FN]  |  [TP]   ← True Positives (hired and predicted hire)
+    """
+    print("=" * 60)
+    print("STEP 5: Evaluation")
+    print("=" * 60)
+
+    y_pred_train = clf.predict(X_train)
+    y_pred_test = clf.predict(X_test)
+
+    train_acc = accuracy_score(y_train, y_pred_train)
+    test_acc = accuracy_score(y_test, y_pred_test)
+
+    print(f"Train accuracy :{train_acc:.4f} ({train_acc*100:.1f}%)")
+    print(f"Test accuracy :{test_acc:.4f} ({test_acc*100:.1f}%)")
+
+    if train_acc - test_acc > .1:
+        print("Possible Overfitting - Train much higher test")
+    else:
+        print("Good generalisation - train and test are close")
+
+    print()
+    print("Classification Report:")
+    print(classification_report(
+        y_test, y_pred_test,
+        target_names=["Reject (0)", "Hire (1)"]
+    ))
+
+    print("Confusion Matrix:")
+
