@@ -58,7 +58,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from scipy.sparse import hstack
 
 # Config
-DATASET_PATH = "/Resume_Screening/AI_Resume_Screening.csv"  # path to your csv file
+DATASET_PATH = "/Users/briankimanzi/Documents/programmingLanguages/PythonProgramming/Resume_Screening/AI_Resume_Screening.csv"  # path to your csv file
 MODEL_PATH = "resume_model.pkl"  # Where to save the trained model
 ENCODER_PATH = "label_encoder.pkl"  # Where to save encoders
 
