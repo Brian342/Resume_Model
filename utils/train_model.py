@@ -56,3 +56,7 @@ from sklearn.metrics import (
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from scipy.sparse import hstack
+
+# Config
+DATASET_PATH = "/Resume_Screening/AI_Resume_Screening.csv"
+MODEL_PATH = "resume_model.pkl"
