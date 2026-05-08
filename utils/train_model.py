@@ -146,4 +146,102 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     print(f"skill_count range: {df['skill_count'].min()} - {df['skill_count'].max()}")
 
     # Flag for having a certification (vs "None")
-    df["has_certification"] = (df[])
+    df["has_certification"] = (df["Certifications"] != "None").astype(int)
+    print(f"has_certification: {df['has_certification'].sum()} candidates with certs")
+
+    # Map education to a numeric seniority level
+    # This helps the model understand PhD > M.Tech > B.Tech etc
+    edu_rank = {
+        "B.Sc": 1,
+        "B.Tech": 2,
+        "MBA": 3,
+        "M.Tech": 4,
+        "PhD": 5,
+    }
+    df["education_rank"] = df["Education"].map(edu_rank).fillna(2)
+    print(f"education_rank: mapped {len(edu_rank)} levels")
+
+    # Is the candidate experienced? (5+ years)
+    df["is_experienced"] = (df["Experience (years)"].astype(int) >= 5).astype(int)
+
+    # High AI Score flag (the dataset's own Scoring)
+    df["high_ai_score"] = (df["AI Score (0-100)"].astype(int) >= 70).astype(int)
+
+    print()
+    return df
+
+
+# Step 3 PREPARE x and Y
+def prepare_features(df: pd.DataFrame):
+    """
+    Splits the dataframe into:
+    X_text     → the Skills text column (for TF-IDF)
+    X_numeric  → numeric features (for scaling)
+    y          → target labels encoded as 0/1
+
+    Returns X_text, X_numeric, y, feature_names
+    """
+    print("=" * 60)
+    print("STEP 3: Preparing Features")
+    print("=" * 60)
+
+    # Encode target: Hire ->1, Reject ->0
+    y = (df[TARGET_COLUMN] == "Hire").astype(int)
+    print(f"Target encoded: Hire=1, Reject=0")
+    print(f"Class counts: {Counter(y)}")
+
+    # Text feature - Skills Column
+    X_text = df[TEXT_COLUMN].fillna("")
+
+    # Numeric features - all engineered + original numeric cols
+    numeric_feature_names = NUMERICAL_COLUMNS + [
+        "skill_count",
+        "has_certification",
+        "education_rank",
+        "is_experienced",
+        "high_ai_score"
+    ]
+
+    # One-hot encode categorical columns
+    # We do this manually so we can combine with sparse TF-IDF matrix
+    cat_dummies = pd.get_dummies(
+        df[CATEGORICAL_COLUMNS],
+        prefix=CATEGORICAL_COLUMNS
+    )
+
+    # Combine numerical + one-hot categorical into one matrix
+    X_numeric = pd.concat([
+        df[numeric_feature_names].astype(float),
+        cat_dummies
+    ], axis=1)
+
+    print(f"  Text features  : TF-IDF on '{TEXT_COLUMN}'")
+    print(f"  Numeric features: {numeric_feature_names}")
+    print(f"  Categorical features (one-hot): {CATEGORICAL_COLUMNS}")
+    print(f"  Total numeric+cat columns: {X_numeric.shape[1]}")
+    print()
+
+    return X_text, X_numeric, y, X_numeric.columns.tolist()
+
+
+# STEP 4 - BUILD AND TRAIN THE MODEL
+def train_model(X_text, X_numeric, y):
+    """
+    Trains a Logistic Regression classifier Combining:
+        - TF-IDF Vectors from the Skills Text
+        - Numeric + categorical Features
+
+    WHY LOGISTIC REGRESSION?
+      - Trains in milliseconds on 1000 rows
+      - Highly interpretable (you can see which features matter)
+      - Works very well for text classification
+      - class_weight="balanced" automatically handles our 81/19 split
+
+    HOW TF-IDF WORKS:
+      "Python, TensorFlow, NLP" becomes a vector of numbers
+      where each number represents how important a word is
+      relative to all other resumes in the dataset.
+      Common words get low scores, rare-but-important words get high scores.
+
+    Returns the trained model components.
+    """
