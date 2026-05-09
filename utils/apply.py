@@ -179,7 +179,7 @@ def show_job_details(job, seeker_id: int):
 
 # STAGE 2 APPLICATION FORM
 def show_application_form(job, seeker_id: int):
-    if st.button("<- Back to Job Details"):
+    if st.button("← Back to Job Details"):
         st.session_state["apply_stage"] = "detail"
         st.rerun()
 
@@ -187,35 +187,35 @@ def show_application_form(job, seeker_id: int):
     st.markdown(f"**{job['company']}** · {job['location']}")
     st.divider()
 
-    # SECTION 1: RESUME UPLOAD
-    st.markdown("### Resume Upload")
+    # ── SECTION 1: Resume Upload ─────────────────────────────────────────────
+    st.markdown("###  Resume Upload")
     st.markdown(
         "Upload your resume in PDF format. "
         "Our system will **automatically read and score** it using ML."
     )
 
     uploaded_file = st.file_uploader(
-        label= "Choose your resume (PDF only)",
+        label="Choose your resume (PDF only)",
         type=["pdf"],
         key="resume_upload",
-        help="Max 5MB. Use a text-based PDF, not a Scanned Image."
+        help="Max 5MB. Use a text-based PDF, not a scanned image."
     )
 
     parsed_resume = None
 
     if uploaded_file:
         st.success(
-            f"**{uploaded_file.name}** uploaded"
+            f"**{uploaded_file.name}** uploaded "
             f"({uploaded_file.size / 1024:.1f} KB)"
         )
 
-        with st.spinner("Reading your resume..."):
+        with st.spinner(" Reading your resume..."):
             parsed_resume = parse_resume(uploaded_file)
 
-        # Store in session state so re-run don't re-parse
+        # Store in session state so re-runs don't re-parse
         st.session_state["parsed_resume"] = parsed_resume
 
-        # RESUME DETECTION PREVIEW
+        # ── RESUME DETECTION PREVIEW ──────────────────────────────────────────
         if parsed_resume["raw_text"]:
             st.markdown("#### Detected From Your Resume")
 
@@ -223,7 +223,7 @@ def show_application_form(job, seeker_id: int):
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
-                    st.markdown("** Skills**")
+                    st.markdown("**Skills**")
                     if parsed_resume["skills_list"]:
                         pills = " ".join([
                             f"<span style='background:#e8f4fd;color:#1565c0;"
@@ -240,7 +240,7 @@ def show_application_form(job, seeker_id: int):
                             )
                         st.markdown(pills, unsafe_allow_html=True)
                     else:
-                        st.caption("No skills matched - raw text will be used")
+                        st.caption("No skills matched — raw text will be used")
 
                 with col2:
                     st.markdown("**Profile**")
@@ -259,7 +259,7 @@ def show_application_form(job, seeker_id: int):
                     )
 
                 with col3:
-                    st.markdown("** Role Match**")
+                    st.markdown("**Role Match**")
                     role = parsed_resume["job_role"]
                     if role:
                         st.markdown(
@@ -268,6 +268,51 @@ def show_application_form(job, seeker_id: int):
                             f"font-size:13px;font-weight:600'>{role}</span>",
                             unsafe_allow_html=True
                         )
+                    else:
+                        st.caption("Role not detected")
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<p style='font-size:13px;color:#555'>"
+                        f"<b>{parsed_resume['skill_count']}</b> skills found</p>",
+                        unsafe_allow_html=True
+                    )
+
+            st.info(
+                "The ML model will use this detected information to score "
+                "your application. Make sure your PDF is text-based for best results."
+            )
+
+        else:
+            st.warning(
+                "Could not extract text from this PDF. "
+                "Please use a text-based PDF (not a scanned image). "
+                "You can still submit — the employer will review manually."
+            )
+
+    elif "parsed_resume" in st.session_state:
+        parsed_resume = st.session_state["parsed_resume"]
+
+    st.divider()
+
+    # SECTION 2: Screening Questions
+    st.markdown("### Screening Questions")
+    st.markdown("Please answer all questions honestly and in detail.")
+
+    q1 = st.text_area(
+        "1. Why are you interested in this position and what draws you to this company?",
+        placeholder="Tell us what excites you about this role...",
+        height=100, key="q1"
+    )
+    q2 = st.text_area(
+        "2. Describe your most relevant experience for this role.",
+        placeholder="Highlight specific skills, projects or accomplishments...",
+        height=100, key="q2"
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+
 
 
 
