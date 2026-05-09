@@ -350,7 +350,29 @@ def show_application_form(job, seeker_id: int):
 
     # SECTION 4: Submit
     st.markdown("### Ready to Submit?")
-    agreed = st.checkbox("I confirm that all information provided ")
+    agreed = st.checkbox("I confirm that all information provided is accurate.")
+    submit_clicked = st.button(
+        "Submit Application",
+        type="primary",
+        use_container_width=True,
+        disabled=not agreed
+    )
+
+    if submit_clicked:
+        errors = []
+        if not uploaded_file and not st.session_state.get("parsed_resume"):
+            errors.append("Please upload your resume (PDF).")
+        if not q1.strip():
+            errors.append("Please answer question 1.")
+        if not q2.strip():
+            errors.append("Please answer Question 2.")
+
+        if errors:
+            for e in errors:
+                st.error(e)
+            return
+
+        final_parsed = st.session_state.get("parsed_resume") or parsed_resume
 
 
 
