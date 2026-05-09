@@ -395,4 +395,24 @@ def parse_resume(uploaded_file) -> dict:
     # If no skills matched our dictionary, pass the raw text to TF-IDF
     # so the model still has something meaningful to work with
 
+    result = {
+        "raw_text": raw_text,
+        "skills": skills_str,
+        "skills_list": skills_list,
+        "experience_years": experience_years,
+        "education": education,
+        "certifications": certifications,
+        "projects_count": projects_count,
+        "job_role": job_role,
+        "skill_count": len(skills_list),
+    }
+
+    print(f"  Skills found     : {len(skills_list)} — {skills_list[:5]}...")
+    print(f"  Experience       : {experience_years} years")
+    print(f"  Education        : {education}")
+    print(f"  Certifications   : {certifications}")
+    print(f"  Projects count   : {projects_count}")
+    print(f"  Job role         : {job_role or 'not detected'}")
+
+    return result
 
