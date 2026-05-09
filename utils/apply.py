@@ -238,6 +238,15 @@ def show_application_form(job, seeker_id: int):
                                 f"<span style='color:#888;font-size:12px'>"
                                 f" +{extra} more</span>"
                             )
+                        st.markdown(pills, unsafe_allow_html=True)
+                    else:
+                        st.caption("No skills matched - raw text will be used")
+
+                with col2:
+                    st.markdown("**Profile**")
+                    st.markdown(
+
+                    )
 
 
 
