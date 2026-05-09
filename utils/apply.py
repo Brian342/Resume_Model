@@ -312,6 +312,22 @@ def show_application_form(job, seeker_id: int):
 
     col1, col2 = st.columns(2)
     with col1:
+        q3 = st.selectbox(
+            "3. How many years of relevant experience do you have?",
+            options=["Less than 1 year", "1 - 2 years", "3 - 5 years",
+                     "5 - 10 years", "More than 10 years"],
+            key="q3"
+        )
+    with col2:
+        q4 = st.selectbox(
+            "4. What is your availability to start?",
+            options=["Immediately", "Within 2 weeks", "Within 1 month",
+                     "Within 3 months", "Other"],
+            key="q4"
+        )
+
+    st.divider()
+
 
 
 
