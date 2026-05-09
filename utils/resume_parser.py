@@ -262,3 +262,11 @@ def extract_education(text: str) -> str:
 
         Falls back to "B.Sc" if nothing is found.
     """
+    text_lower = text.lower()
+
+    # Patterns are ordered highest to lowest - return first match
+    for pattern, label in EDUCATION_PATTERNS:
+        if re.search(pattern, text_lower, re.IGNORECASE):
+            return label
+
+    return "B.Sc"  # Default
