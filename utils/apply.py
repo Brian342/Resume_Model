@@ -342,6 +342,15 @@ def show_application_form(job, seeker_id: int):
             "</div>",
             unsafe_allow_html=True
         )
+        ai_answer = st.text_area(
+            "Your answer:", placeholder="Type your answer here...",
+            height=100, key="ai_answer"
+        )
+    st.divider()
+
+    # SECTION 4: Submit
+    st.markdown("### Ready to Submit?")
+    agreed = st.checkbox("I confirm that all information provided ")
 
 
 
