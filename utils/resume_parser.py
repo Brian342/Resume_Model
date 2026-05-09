@@ -317,4 +317,14 @@ def extract_projects_count(text: str) -> int:
         if count > 0:
             return min(count, 20)
 
+    # Fallback: count "project" keyword occurrences divided by 2
+    # (project name + project description each mention it once)
+    mentions = len(re.findall(r"\bproject\b", text_lower))
+    return min(max(mentions // 2, 0), 10)
+
+
+def extract_job_role(text: str) -> str:
+    """
+
+    """
 
