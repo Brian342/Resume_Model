@@ -202,3 +202,63 @@ def extract_skills(text: str) -> list:
                 found.append(skill)
 
     return found
+
+
+def extract_experience_years(text: str) -> int:
+    """
+        Estimates total years of experience from the resume text.
+
+        Strategy 1 — look for explicit statements:
+          "5 years of experience", "3+ years", "over 4 years"
+
+        Strategy 2 — scan for date ranges and sum them up:
+          "Jan 2019 – Mar 2022" → 3 years
+          "2020 – Present"      → calculated from current year
+
+        Returns: integer years (0 if nothing found)
+    """
+    text_lower = text.lower()
+    current_year = datetime.now().year
+
+    # Strategy 1: Explicit mention
+    # Matches "5 years", "3+ years", "over 4 years", "two years"
+    explicit_patterns = [
+        r"(\d+)\+?\s*years?\s*(?:of\s*)?(?:experience|exp)",
+        r"(\d+)\s*years?\s*(?:in|of|working)",
+        r"experience\s*(?:of\s*)?(\d+)\+?\s*years?",
+    ]
+    for pattern in explicit_patterns:
+        match = re.search(pattern, text_lower)
+        if match:
+            years = int(match.group(1))
+            if 0 < years < 50:  # Sanity check
+                return years
+
+    # Strategy 2 Date range scanning
+    # find all 4-digit years in the document
+    years_found = [int(y) for y in re.findall(r"\b(20\d{2}|19\d{2})\b", text)]
+    years_found = [y for y in years_found if 1990 <= y <= current_year]
+
+    if len(years_found) >= 2:
+        # Check for "present" or "current" alongside years
+        has_present = bool(re.search(
+            r"\b(present|current|now|ongoing)\b", text_lower
+        ))
+        earliest = min(years_found)
+        latest = current_year if has_present else max(years_found)
+        estimated = latest - earliest
+
+        # Cap at reasonable bounds
+        if 0 < estimated < 40:
+            return estimated
+
+    return 0
+
+
+def extract_education(text: str) -> str:
+    """
+        Detects the highest education level mentioned in the resume.
+        Returns the highest match found (PhD > M.Tech > MBA > B.Tech > B.Sc).
+
+        Falls back to "B.Sc" if nothing is found.
+    """
