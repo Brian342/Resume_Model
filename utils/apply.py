@@ -135,3 +135,25 @@ def save_resume(uploaded_file, seeker_id: int, job_id: int) -> str:
     return str(file_path)
 
 
+# STAGE 1 - JOB DETAIL VIEW
+def show_job_details(job, seeker_id: int):
+    if st.button("<- Back to Jobs"):
+        st.session_state["current_page"] = "seeker_dashboard"
+        st.session_state.pop("selected_job_id", None)
+        st.session_state.pop("apply_stage", None)
+        st.rerun()
+
+    st.divider()
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        st.title(job["title"])
+        st.markdown(f"### {job['company']}")
+        st.markdown(
+            f" **{job['location']}** &nbsp;&nbsp;"
+            f" **{job['salary'] or 'Salary not specified'}** &nbsp;&nbsp;"
+            f" **Posted {str(job['created_at'])[:10]}**",
+            unsafe_allow_html=True
+        )
+
+
