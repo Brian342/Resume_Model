@@ -245,8 +245,29 @@ def show_application_form(job, seeker_id: int):
                 with col2:
                     st.markdown("**Profile**")
                     st.markdown(
-
+                        f"<table style='font-size:13px;width:100%'>"
+                        f"<tr><td style='color:#666;padding:2px 0'>Experience</td>"
+                        f"<td><b>{parsed_resume['experience_years']} yrs</b></td></tr>"
+                        f"<tr><td style='color:#666;padding:2px 0'>Education</td>"
+                        f"<td><b>{parsed_resume['education']}</b></td></tr>"
+                        f"<tr><td style='color:#666;padding:2px 0'>Certification</td>"
+                        f"<td><b>{parsed_resume['certifications']}</b></td></tr>"
+                        f"<tr><td style='color:#666;padding:2px 0'>Projects</td>"
+                        f"<td><b>{parsed_resume['projects_count']}</b></td></tr>"
+                        f"</table>",
+                        unsafe_allow_html=True
                     )
+
+                with col3:
+                    st.markdown("** Role Match**")
+                    role = parsed_resume["job_role"]
+                    if role:
+                        st.markdown(
+                            f"<span style='background:#e8f5e9;color:#2e7d32;"
+                            f"padding:4px 12px;border-radius:10px;"
+                            f"font-size:13px;font-weight:600'>{role}</span>",
+                            unsafe_allow_html=True
+                        )
 
 
 
