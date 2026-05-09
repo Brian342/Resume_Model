@@ -325,6 +325,17 @@ def extract_projects_count(text: str) -> int:
 
 def extract_job_role(text: str) -> str:
     """
+    Detects the candidate's target or current job role from resume text.
+    Matches against JOB_ROLE_PATTERNS.
 
+    Returns the matched role label or empty string if not found
     """
+    text_lower = text.lower()
+
+    for role_label, keywords in JOB_ROLE_PATTERNS.items():
+        for keyword in keywords:
+            if keyword in text_lower:
+                return role_label
+
+    return ""
 
