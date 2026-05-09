@@ -156,4 +156,29 @@ def show_job_details(job, seeker_id: int):
             unsafe_allow_html=True
         )
 
+    with col2:
+        already = has_applied(job["id"], seeker_id)
+        if already:
+            st.success("Already Applied")
+        else:
+            if st.button("Apply Now", type="primary", use_container_width=True):
+                st.session_state["apply_stage"] = "form"
+                st.rerun()
 
+    st.divider()
+    tab1, tab2 = st.tabs(["Job Description", "Requirements"])
+
+    with tab1:
+        st.markdown("### About the Role")
+        st.markdown(job["description"].replace("\n", "\n\n"))
+
+    with tab2:
+        st.markdown("### What we're Looking For")
+        st.markdown(job["requirements"].replace("\n", "\n\n"))
+
+
+# STAGE 2 APPLICATION FORM
+def show_application_form(job, seeker_id: int):
+    if st.button("<- Back to Job Details"):
+        st.session_state["apply_stage"] = "detail"
+        st.rerun()
