@@ -49,40 +49,58 @@ from resume_parser import parse_resume
 # LOAD THE TRAINED MODEL ONCE
 _MODEL_PATH = Path(__file__).parent / "resume_model.pkl"
 
-# Resume Storage Folder
+try:
+    _model_bundle = joblib.load(_MODEL_PATH)
+    MODEL_LOADED = True
+except FileNotFoundError:
+    _model_bundle = None
+    MODEL_LOADED = False
+
+# RESUME STORAGE FOLDER
 UPLOAD_DIR = Path(__file__).parent / "uploads" / "resume"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # AI SCORE PLACEHOLDER
-def score_resume(resume_text, job_description, job_requirements):
-    import joblib
-    _model = joblib.load("resume_model.pkl")
+def score_resume(parsed_resume: dict) -> tuple:
     """
-      PLACEHOLDER - Replace this with your ML model
+        Takes the parsed resume dict from resume_parser.parse_resume()
+        and returns a real ML score using the trained model.
 
-      This function receives:
-          resume_text: raw text extracted from the PDF
-          job_description: the job's description from the database
-          job_requirements: the job's requirements from the database
+        parsed_resume: dict returned by parse_resume()
+        Returns: (score: float 0-100, label: str)
+    """
+    if not MODEL_LOADED or _model_bundle is None:
+        skills_count = parsed_resume.get("skill_count", 0)
+        exp_years = parsed_resume.get("experience_years", 0)
+        fallback_score = min(100, skills_count * 8 + exp_years * 5)
+        fallback_label = (
+            "Qualified" if fallback_score >= 65 else
+            "Review Needed" if fallback_score >= 40 else
+            "Not Qualified"
+        )
+        return float(fallback_score), f"{fallback_label} (model not loaded)"
 
-      It should return:
-          score (float): 0 to 100 match score
-          label (str): "Qualified", "Not Qualified", or "Review Needed"
-
-      Returns a fixed placeholder so the rest of the
-      system works end-to-end while you build the ML model.
-      """
-    from train_model import predict_single
     resume_data = {
-        "skills": resume_text,
-        "experience_years": 0,  # extract from form answers
-        "education": "B.Sc",
-        "certifications": "None",
-        "job_role": "",
-        "projects_count": 0,
+        "skills": parsed_resume["skills"],
+        "experience_years": parsed_resume["experience_years"],
+        "education": parsed_resume["education"],
+        "certifications": parsed_resume["certifications"],
+        "job_role": parsed_resume["job_role"],
+        "projects_count": parsed_resume["projects_count"],
+        "Education": parsed_resume["education"],
+        "Certifications": parsed_resume["certifications"],
+        "Job Role": parsed_resume["job_role"],
     }
-    return predict_single(_model, resume_data)
+
+    try:
+        from train_model import predict_single
+        score, label = predict_single(_model_bundle, resume_data)
+        return float(score), label
+    except Exception as e:
+        return .0, f"Scoring error: {str(e)}"
+
+
 
 
 # PDF Text Extractor
