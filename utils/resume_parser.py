@@ -340,6 +340,10 @@ def extract_job_role(text: str) -> str:
     return ""
 
 
+def extract_job_skills(job_description: str, job_requirements: str) -> list:
+    pass
+
+
 # MAIN PARSE FUNCTION
 
 def parse_resume(uploaded_file) -> dict:
@@ -415,4 +419,3 @@ def parse_resume(uploaded_file) -> dict:
     print(f"  Job role         : {job_role or 'not detected'}")
 
     return result
-
