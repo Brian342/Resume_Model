@@ -397,4 +397,27 @@ def show_application_form(job, seeker_id: int):
         )
 
         if not saved:
+            st.error("You have already applied to this job.")
+            return
+
+        # Score with Real ML
+        with st.spinner("Scoring Your Resume..."):
+            if final_parsed:
+                score, label = score_resume(final_parsed)
+            else:
+                score, label = .0, "No resume data"
+
+        from db import get_applications_by_seeker
+        all_apps = get_applications_by_seeker(seeker_id)
+        latest_app = all_apps[0] if all_apps else None
+        if latest_app:
+            update_application_score(latest_app["id"], score, label)
+
+        st.session_state["last_score"] = score
+        st.session_state["last_label"] = label
+        st.session_state.pop("parsed_resume", None)
+        st.session_state["apply_stage"] = "success"
+        st.rerun()
+
+
 
