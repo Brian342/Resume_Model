@@ -374,6 +374,27 @@ def show_application_form(job, seeker_id: int):
 
         final_parsed = st.session_state.get("parsed_resume") or parsed_resume
 
+        if uploaded_file:
+            uploaded_file.seek(0)
+            resume_path = save_resume(uploaded_file, seeker_id, job["id"])
+        else:
+            resume_path = ""
 
+        answers = {
+            "Why interested in this role?": q1.strip(),
+            "Most relevant experience": q2.strip(),
+            "Years of experience": q3,
+            "Availability to start": q4,
+            "AI interview question response": ai_answer.strip() or "Not answered",
+        }
+        answers_json = json.dumps(answers)
 
+        saved = create_application(
+            job_id=job["id"],
+            seeker_id=seeker_id,
+            resume_path=resume_path,
+            answers_json=answers_json
+        )
+
+        if not saved:
 
