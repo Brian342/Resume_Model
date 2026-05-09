@@ -306,5 +306,15 @@ def extract_projects_count(text: str) -> int:
         r"projects?\s*\n(.*?)(?:\n[A-Z]{2,}|\Z)",
         text,
         re.IGNORECASE | re.DOTALL
-
     )
+
+    if projects_section:
+        section_text = projects_section.group(1)
+        # Count bullet points or numbered items
+        bullets = len(re.findall(r"^[\•\-\*\✓\▪]", section_text, re.MULTILINE))
+        numbered = len(re.findall(r"^\d+[\.\)]\s+\w", section_text, re.MULTILINE))
+        count = max(bullets, numbered)
+        if count > 0:
+            return min(count, 20)
+
+
