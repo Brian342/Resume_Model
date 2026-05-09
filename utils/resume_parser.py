@@ -381,3 +381,14 @@ def parse_resume(uploaded_file) -> dict:
             "job_role": "",
             "skill_count": 0,
         }
+    print(f" Extracted {len(raw_text)} characters from PDF")
+
+    # Step 2: Extract each field
+    skills_list = extract_skills(raw_text)
+    experience_years = extract_experience_years(raw_text)
+    education = extract_education(raw_text)
+    certifications = extract_certifications(raw_text)
+    projects_count = extract_projects_count(raw_text)
+    job_role = extract_job_role(raw_text)
+
+
