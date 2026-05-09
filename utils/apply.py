@@ -124,3 +124,14 @@ def extract_text_from_pdf(uploaded_file) -> str:
     except Exception as e:
         st.warning(f"Could not extract text from PDF: {e}")
         return ""
+
+
+# SAVE RESUME TO DISK
+def save_resume(uploaded_file, seeker_id: int, job_id: int) -> str:
+    safe_name = f"seeker{seeker_id}_job{job_id}_{uploaded_file.name}"
+    file_path = UPLOAD_DIR / safe_name
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    return str(file_path)
+
+
