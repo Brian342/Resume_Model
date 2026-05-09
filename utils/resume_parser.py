@@ -339,3 +339,45 @@ def extract_job_role(text: str) -> str:
 
     return ""
 
+
+# MAIN PARSE FUNCTION
+
+def parse_resume(uploaded_file) -> dict:
+    """
+    Master function - extracts all structured fields from a resume PDF
+
+    This is the only function you need to call from apply.py
+
+    uploaded_file: Streamlit UploadedFile object
+
+    Returns a dict with all fields needed by predict_single():
+    {
+        "raw_text"         : str   — full extracted text (for TF-IDF)
+        "skills"           : str   — comma-separated matched skills
+        "skills_list"      : list  — list of matched skills
+        "experience_years" : int   — estimated years of experience
+        "education"        : str   — highest degree found
+        "certifications"   : str   — certification label or "None"
+        "projects_count"   : int   — estimated number of projects
+        "job_role"         : str   — detected job role or ""
+        "skill_count"      : int   — number of skills found
+    }
+    """
+    print(" Parsing resume PDF...")
+
+    # Step 1: Extract raw text from PDF
+    raw_text = extract_text_from_pdf(uploaded_file)
+
+    if not raw_text:
+        print("Could not extract text from PDF - using empty defaults")
+        return {
+            "raw_text": "",
+            "skills": "",
+            "skills_list": [],
+            "experience_years": 0,
+            "education": "B.Sc",
+            "certifications": "None",
+            "projects_count": 0,
+            "job_role": "",
+            "skill_count": 0,
+        }
