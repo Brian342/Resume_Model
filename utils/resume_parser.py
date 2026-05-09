@@ -391,4 +391,8 @@ def parse_resume(uploaded_file) -> dict:
     projects_count = extract_projects_count(raw_text)
     job_role = extract_job_role(raw_text)
 
+    skills_str = ", ".join(skills_list) if skills_list else raw_text[:500]
+    # If no skills matched our dictionary, pass the raw text to TF-IDF
+    # so the model still has something meaningful to work with
+
 
