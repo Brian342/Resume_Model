@@ -36,7 +36,7 @@ IMPORTS USED:
 """
 import streamlit as st
 import json
-import os
+import joblib
 from pathlib import Path
 from db import (
     get_job_by_id,
@@ -44,6 +44,10 @@ from db import (
     update_application_score,
     has_applied
 )
+from resume_parser import parse_resume
+
+# LOAD THE TRAINED MODEL ONCE
+_MODEL_PATH = Path(__file__).parent / "resume_model.pkl"
 
 # Resume Storage Folder
 UPLOAD_DIR = Path(__file__).parent / "uploads" / "resume"
