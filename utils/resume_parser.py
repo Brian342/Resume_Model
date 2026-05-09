@@ -270,3 +270,41 @@ def extract_education(text: str) -> str:
             return label
 
     return "B.Sc"  # Default
+
+
+def extract_certifications(text: str) -> str:
+    """
+    Detects certifications mentioned in the resume.
+    Returns the first matched Certification label, or "None".
+
+    Matches against KNOWN_CERTIFICATIONS dict keys (case-insensitive).
+    """
+    text_lower = text.lower()
+
+    for keyword, cert_label in KNOWN_CERTIFICATIONS.items():
+        if keyword in text_lower:
+            return cert_label
+
+    return "None"
+
+
+def extract_projects_count(text: str) -> int:
+    """
+    Estimates the number of projects from the resume.
+
+    Counts occurrences of project indicators:
+        - Numbered lists in a Projects section
+        - Lines starting with bullet points after "Projects"
+        - "Project:" labels
+
+    Returns an integer count (capped at 20 for sanity)
+    """
+    text_lower = text.lower()
+
+    # Look for a Projects section and count items within it
+    projects_section = re.search(
+        r"projects?\s*\n(.*?)(?:\n[A-Z]{2,}|\Z)",
+        text,
+        re.IGNORECASE | re.DOTALL
+
+    )
