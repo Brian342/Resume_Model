@@ -194,3 +194,50 @@ def show_application_form(job, seeker_id: int):
         "Our system will **automatically read and score** it using ML."
     )
 
+    uploaded_file = st.file_uploader(
+        label= "Choose your resume (PDF only)",
+        type=["pdf"],
+        key="resume_upload",
+        help="Max 5MB. Use a text-based PDF, not a Scanned Image."
+    )
+
+    parsed_resume = None
+
+    if uploaded_file:
+        st.success(
+            f"**{uploaded_file.name}** uploaded"
+            f"({uploaded_file.size / 1024:.1f} KB)"
+        )
+
+        with st.spinner("Reading your resume..."):
+            parsed_resume = parse_resume(uploaded_file)
+
+        # Store in session state so re-run don't re-parse
+        st.session_state["parsed_resume"] = parsed_resume
+
+        # RESUME DETECTION PREVIEW
+        if parsed_resume["raw_text"]:
+            st.markdown("#### Detected From Your Resume")
+
+            with st.container(border=True):
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.markdown("** Skills**")
+                    if parsed_resume["skills_list"]:
+                        pills = " ".join([
+                            f"<span style='background:#e8f4fd;color:#1565c0;"
+                            f"padding:2px 8px;border-radius:10px;"
+                            f"font-size:12px;margin:2px;display:inline-block'>"
+                            f"{s}</span>"
+                            for s in parsed_resume["skills_list"][:10]
+                        ])
+                        extra = len(parsed_resume["skills_list"]) - 10
+                        if extra > 0:
+                            pills += (
+                                f"<span style='color:#888;font-size:12px'>"
+                                f" +{extra} more</span>"
+                            )
+
+
+
