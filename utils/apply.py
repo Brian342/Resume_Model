@@ -420,4 +420,100 @@ def show_application_form(job, seeker_id: int):
         st.rerun()
 
 
+# STAGE 3 SUCCESS SCREEN
+def show_success_screen(job):
+    st.balloons()
 
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        st.markdown(
+            "<div style='text-align:center;padding:2rem 0'>"
+            "<div style='font-size:64px'></div>"
+            "<h2>Application Submitted!</h2>"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+        with st.container(border=True):
+            st.markdown(f"**Position:** {job['title']}")
+            st.markdown(f"**Company:** {job['company']}")
+            st.markdown(f"**Location:** {job['location']}")
+
+            score = st.session_state.get("last_score")
+            label = st.session_state.get("last_label")
+
+            if score is not None:
+                st.divider()
+                colour = (
+                    "#2e7d32" if score >= 65 else
+                    "#e65100" if score >= 40 else
+                    "#c62828"
+                )
+                st.markdown("**Your ML Match Score:**")
+                st.markdown(
+                    f"<div style='background:#e0e0e0;border-radius:8px;"
+                    f"height:16px;width:100%'>"
+                    f"<div style='background:{colour};width:{score}%;"
+                    f"height:16px;border-radius:8px'></div></div>"
+                    f"<p style='color:{colour};font-weight:700;"
+                    f"font-size:18px;margin-top:6px'>"
+                    f"{score:.0f}/100 — {label}</p>",
+                    unsafe_allow_html=True
+                )
+
+    st.markdown("---")
+    st.markdown("### What happens next?")
+    st.markdown(
+        "1. Your resume has been **scored by our ML model**.\n"
+        "2. The employer will review your application and score.\n"
+        "3. You will receive an **email notification** once a decision is made.\n"
+        "4. Track your application status in **My Applications**."
+    )
+    st.markdown("---")
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        if st.button("View My Applications", use_container_width=True, type="primary"):
+            for key in ["selected_job_id", "apply_stage", "last_score", "last_label"]:
+                st.session_state.pop(key, None)
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+    with col_b:
+        if st.button("Browse More Jobs", use_container_width=True):
+            for key in ["selected_job_id", "apply_stage", "last_score", "last_label"]:
+                st.session_state.pop(key, None)
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+
+
+# MAIN FUNCTION called from app.py
+def show_apply_page():
+    seeker_id = st.session_state["user_id"]
+
+    job_id = st.session_state.get("selected_job_id")
+    if not job_id:
+        st.warning("No job selected. Please choose a job from the job board.")
+        if st.button("Back to Jobs"):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+        return
+
+    job = get_job_by_id(job_id)
+    if not job:
+        st.error("Job not found. It may have been removed.")
+        if st.button("Back to Jobs"):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+        return
+
+    if "apply_stage" not in st.session_state:
+        st.session_state["apply_stage"] = "detail"
+
+    stage = st.session_state["apply_stage"]
+
+    if stage == "detail":
+        show_job_details(job, seeker_id)
+    elif stage == "form":
+        show_application_form(job, seeker_id)
+    elif stage == "success":
+        show_success_screen(job)
