@@ -182,3 +182,15 @@ def show_application_form(job, seeker_id: int):
     if st.button("<- Back to Job Details"):
         st.session_state["apply_stage"] = "detail"
         st.rerun()
+
+    st.markdown(f"## Applying for: {job['title']}")
+    st.markdown(f"**{job['company']}** · {job['location']}")
+    st.divider()
+
+    # SECTION 1: RESUME UPLOAD
+    st.markdown("### Resume Upload")
+    st.markdown(
+        "Upload your resume in PDF format. "
+        "Our system will **automatically read and score** it using ML."
+    )
+
