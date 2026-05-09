@@ -1,0 +1,409 @@
+
+# Save Resume To DisK
+def save_resume(uploaded_file, seeker_id: int, job_id: int) -> str:
+    """
+    Saves the uploaded PDF to the uploads/resumes folder.
+
+    File is named: seeker{id}_job{id}_filename.pdf
+    This naming prevents collisions if two seekers upload
+    a file with the same name.
+
+    Returns the file path as a string (stored in the database).
+    """
+    # Build a safe unique filename
+    safe_name = f"seeker{seeker_id}_job{job_id}_{uploaded_file.name}"
+    file_path = UPLOAD_DIR / safe_name
+
+    # Write the file bytes to disk
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    return str(file_path)
+
+
+# STAGE 1 — JOB DETAIL VIEW
+def show_job_details(job, seeker_id: int):
+    """
+    Renders the full job detail page.
+
+    Shows all job information and an "Apply Now" button.
+    If the seeker has already applied, the button is replaced
+    with an "Already Applied" message.
+
+    job       : a Row object from get_job_by_id()
+    seeker_id : the logged-in seeker's user ID
+    """
+    # Back button
+    if st.button("<- Back to Jobs"):
+        st.session_state["current_page"] = "seeker_dashboard"
+        st.session_state.pop("selected_job_id", None)
+        st.session_state.pop("apply_stage", None)
+        st.rerun()
+
+    st.divider()
+
+    # Job header
+    col1, col2 = st.columns([3, 1])
+
+    with col1:
+        st.title(job["title"])
+        st.markdown(f"### {job['company']}")
+
+        # Info pills row
+        st.markdown(
+            f"**{job['location']}** &nbsp;&nbsp;"
+            f"**{job['salary'] or 'Salary not specified'}** &nbsp;&nbsp;"
+            f"**Posted {str(job['created_at'])[:10]}**",
+            unsafe_allow_html=True
+        )
+    with col2:
+        # check if already applied
+        already = has_applied(job["id"], seeker_id)
+
+        if already:
+            st.success("You have already applied to this job")
+        else:
+            # This is the main call-to-action button
+            # Clicking it moves to Stage 2 (the application form)
+            if st.button(
+                    "Apply Now",
+                    type="primary",
+                    use_container_width=True
+            ):
+                st.session_state["apply_stage"] = "form"
+                st.rerun()
+    st.divider()
+
+    # Job body
+    tab1, tab2 = st.tabs(["Job Description", "Requirements"])
+
+    with tab1:
+        st.markdown("### About the Role")
+        # Replace newlines with proper markdown line breaks
+        st.markdown(job["description"].replace("\n", "\n\n"))
+    with tab2:
+        st.markdown("### What we're Looking For")
+        st.markdown(job["requirements"].replace("\n", "\n\n"))
+
+
+# Stage 2 Application Form
+def show_application_form(job, seeker_id: int):
+    """
+    Renders the full application form.
+    Sections:
+      1. Job title reminder at the top
+      2. Resume upload (PDF only)
+      3. Four screening questions
+      4. AI interview question placeholder
+      5. Submit button
+    On submit:
+      - Saves resume to disk
+      - Extracts text from PDF
+      - Saves application to database
+      - Calls ML scorer placeholder
+      - Updates score in database
+      - Shows success confirmation
+    job       : Row object for the job being applied to
+    seeker_id : logged-in seeker's user ID
+    """
+    # Back button
+    if st.button("<- Back to Job Details"):
+        st.session_state["apply_stage"] = "detail"
+        st.rerun()
+    st.markdown(f"## Apply for: {job['title']}")
+    st.markdown(f"**{job['company']}** · {job['location']}")
+    st.divider()
+
+    # Section 1: Resume Upload
+    st.markdown("### Resume Upload")
+    st.markdown("Upload your resume in PDF format. Make sure it is up to date")
+
+    uploaded_file = st.file_uploader(
+        label="Choose your resume (PDF only)",
+        type=["pdf"],
+        key="resume_upload",
+        help="Maximum file size: 5MB"
+    )
+
+    if uploaded_file:
+        # Show a small preview of what was uploaded
+        st.success(f"Resume Uploaded: **{uploaded_file.name}** "
+                   f"({uploaded_file.size / 1024:.1f} KB)")
+
+    st.divider()
+
+    # Section 2: Screening Questions
+    # These are standard questions every applicant answers
+    # Answers are stored as JSON in the application table
+    # The employer reads them in the applicant review panel
+
+    st.markdown("### Screening Questions")
+    st.markdown("Please answer all questions honestly and in details.")
+
+    q1 = st.text_area(
+        "1. Why are you interested in this position and what draws you to this company?",
+        placeholder="Tell us what excites you about this role...",
+        height=100,
+        key="q1"
+    )
+
+    q2 = st.text_area(
+        "2. Describe your most relevant experience for this role.",
+        placeholder="Highlight specific skills, projects, or accomplishments...",
+        height=100,
+        key="q2"
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        q3 = st.selectbox(
+            "3. How many years of relevant experience do you have?",
+            options=[
+                "Less than 1 year",
+                "1 – 2 years",
+                "3 – 5 years",
+                "5 – 10 years",
+                "More than 10 years"
+            ],
+            key="q3"
+        )
+    with col2:
+        q4 = st.selectbox(
+            "4. What is your availability to start?",
+            options=[
+                "Immediately",
+                "Within 2 weeks",
+                "Within 1 month",
+                "Within 3 months",
+                "Other"
+            ],
+            key="q4"
+        )
+    st.divider()
+
+    # ── SECTION 3: AI Interview Question (Placeholder) ───────────────────────
+    # This section is where your AI-generated interview question will appear.
+    # For now it shows a placeholder box with instructions on how to wire it.
+    #
+    # TO ADD YOUR AI HERE:
+    #   1. Call your AI API with the job description as context
+    #   2. Display the returned question in st.markdown()
+    #   3. Capture the answer with st.text_area()
+    #   4. Add the answer to the answers dict before saving
+    st.markdown("### AI_Generated Interview Question")
+
+    with st.container(border=True):
+        st.markdown(
+            "<div style='background:#f0f4ff;padding:16px;border-radius:8px;"
+            "border-left:4px solid #3b5bdb'>"
+            "<p style='margin:0;color:#3b5bdb;font-weight:600'>AI Interview Question</p>"
+            "<p style='margin:8px 0 0;color:#444'>This question will be dynamically "
+            "generated by your AI model based on the job description.</p>"
+            "<p style='margin:8px 0 0;color:#888;font-size:13px'>"
+            "[ API call here for AI model]</p>"
+            "</div>",
+            unsafe_allow_html=True
+        )
+        # Placeholder answer box - theseeker can still type here
+        ai_answer = st.text_area(
+            "Your answer to the AI question:",
+            placeholder="Your answer will appear here once the AI question is generated...",
+            height=100,
+            key="ai_answer",
+            disabled=False  # set to False so they can type when you add the AI
+
+        )
+    st.divider()
+
+    # Section 4: Submit
+    st.markdown("### Ready to submit?")
+    st.markdown(
+        "By clicking **submit Application** you confirm that all information "
+        "provided is accurate and complete."
+    )
+    # Checkbox forces the seeker to confirm before submitting
+    agreed = st.checkbox("I confirm that all information provided is accurate.")
+
+    submit_clicked = st.button(
+        "Submit Application",
+        type="primary",
+        use_container_width=True,
+        disabled=not agreed  # Button is greyed out until the checkbox is ticked
+    )
+
+    # Handle Submission
+    if submit_clicked:
+        # Validate required fields
+        errors = []
+
+        if not uploaded_file:
+            errors.append("Please upload your resume (PDF).")
+        if not q1.strip():
+            errors.append("Please answer Question 1.")
+        if not q2.strip():
+            errors.append("Please answer Question 2.")
+
+        if errors:
+            for error in errors:
+                st.error(error)
+            return  # stop here dont submit untill errors are fixed
+
+        # save resume to disk
+        resume_path = save_resume(uploaded_file, seeker_id, job["id"])
+
+        # Extract text for ML scoring
+        # We need to reset the file pointer before reading again
+        # Because st.file_uploader already read it once for the preview
+        uploaded_file.seek(0)
+        resume_text = extract_text_from_pdf(uploaded_file)
+
+        # Build answers dict-> JSON string
+        # This is what gets stored in the database and shown to the employer
+        answers = {
+            "Why interested in this role?": q1.strip(),
+            "Most relevant experience": q2.strip(),
+            "Years of experience": q3,
+            "Availability to start": q4,
+            "AI interview question response": ai_answer.strip() or "Not answered",
+        }
+        answer_json = json.dumps(answers)
+
+        # Save application to database
+        saved = create_application(
+            job_id=job["id"],
+            seeker_id=seeker_id,
+            resume_path=resume_path,
+            answers_json=answer_json
+        )
+
+        if not saved:
+            st.error("You have already applied to this job.")
+            return
+
+        # Run ML Scorer (placeholder)
+        # Once your ML model is ready, score_resume() will return real values.
+        # The database is updated immediately - no other code needs changing
+        score, label = score_resume(
+            resume_text=resume_text,
+            job_description=job["description"],
+            job_requirements=job["requirements"]
+        )
+
+        # Fetch the application ID we just created so we can update it
+        from db import get_applications_by_seeker
+        all_apps = get_applications_by_seeker(seeker_id)
+        # The most recent application is first (ordered by applied_at DESC)
+        latest_app = all_apps[0] if all_apps else None
+
+        if latest_app:
+            update_application_score(
+                latest_app["id"], score, label)
+
+        # Show success screen
+        st.session_state["apply_stage"] = "success"
+        st.rerun()
+
+
+# Stage 3 Success Screen
+def show_success_screen(job):
+    """
+    Shown after a successful application submission.
+    Gives the seeker clear next steps and a button back to the dashboard
+    """
+    st.balloons()
+
+    # Centred success message
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(
+            "<div style='text-align:center;padding:2rem 0'>"
+            "<div style='font-size:64px'></div>"
+            "<h2>Application Submitted!</h2>"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+    with st.container(border=True):
+        st.markdown(f"**Position:** {job['title']}")
+        st.markdown(f"**Company:** {job['company']}")
+        st.markdown(f"**Location:** {job['location']}")
+
+    st.markdown("---")
+    st.markdown("### What happens next?")
+    st.markdown(
+        "1. Your resume will be reviewed and scored by our system.\n"
+        "2. The employer will review your application and score.\n"
+        "3. You will receive an **email notification** once a decision is made.\n"
+        "4. Track your application status in **My Applications**."
+    )
+
+    st.markdown("---")
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        if st.button(
+                "View My Applications",
+                use_container_width=True,
+                type="primary"
+        ):
+            # Clean up apply-related state and go to dashboard
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.session_state.pop("selected_job_id", None)
+            st.session_state.pop("apply_stage", None)
+            st.rerun()
+
+    with col_b:
+        if st.button("Browse More Jobs", use_container_width=True):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.session_state.pop("selected_job_id", None)
+            st.session_state.pop("apply_stage", None)
+            st.rerun()
+
+
+# Main Function - called from app.py
+def show_apply_page():
+    """
+    Entry point for this page.
+    app.py calls this when current_page == "apply".
+
+    Read selected_job_id from session_state.
+    Controls which stage is shown via apply_stage:
+      "detail" → Stage 1: job information + Apply Now button
+      "form" → Stage 2: resume upload + questions + submit
+      "success" → Stage 3: confirmation screen
+    """
+    seeker_id = st.session_state["user_id"]
+
+    # Safety check - if no job was selected, send back to dashboard
+    job_id = st.session_state.get("selected_job_id")
+    if not job_id:
+        st.warning("No job selected. Please choose a job from the job board.")
+        if st.button("Back to Jobs"):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+        return
+
+    # Fetch the full job from the database
+    job = get_job_by_id(job_id)
+    if not job:
+        st.error("Job not found. It may have been removed.")
+        if st.button("Back to Jobs"):
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+        return
+
+    # Initialize apply_stage if not set
+    if "apply_stage" not in st.session_state:
+        st.session_state["apply_stage"] = "detail"
+
+    # Route to the correct stage
+    stage = st.session_state["apply_stage"]
+
+    if stage == "detail":
+        show_job_details(job, seeker_id)
+
+    elif stage == "form":
+        show_application_form(job, seeker_id)
+
+    elif stage == "success":
+        show_success_screen(job)
