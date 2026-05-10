@@ -339,7 +339,7 @@ def extract_job_role(text: str) -> str:
 
     return ""
 
-
+# This is a comment
 def extract_job_skills(job_description: str, job_requirements: str) -> list:
     pass
 
