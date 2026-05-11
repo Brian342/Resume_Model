@@ -15,6 +15,8 @@ IMPORTS USED:
   streamlit — all UI components
   json             — to decode the answers stored as JSON in the DB
 """
+import os.path
+
 import streamlit as st
 import json
 from db import (
@@ -22,7 +24,9 @@ from db import (
     get_jobs_by_employer,
     get_applications_by_job,
     update_application_status,
-    toggle_job_active
+    toggle_job_active,
+    delete_job,
+    update_job
 )
 
 try:
@@ -49,6 +53,43 @@ def score_color(score):
     if score >= 40:
         return "#e65100"  # orange
     return "#c62828"  # red
+
+
+# HELPER RESUME DOWNLOAD BUTTON
+def show_resume_download(resume_path: str, seeker_name: str):
+    """
+    Reads the resume PDF from disk and renders a Streamlit
+    download button so the employer can download it directly.
+
+    resume_path : the file path stored in the database
+    seeker_name : used to name the downloaded file nicely
+    """
+    if not resume_path:
+        st.caption("No resume uploaded")
+        return
+
+    if not os.path.exists(resume_path):
+        st.caption(f"Resume file not found on server")
+        return
+
+    try:
+        with open(resume_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        # Clean the seeker name for use as a filename
+        safe_name = seeker_name.replace(" ", "_").lower()
+        filename = f"resume_{safe_name}.pdf"
+
+        st.download_button(
+            label = "Download Resume",
+            data = pdf_bytes,
+            filename = filename,
+            mime="application/pdf",
+            use_container_width=True,
+            key=f"dl_{resume_path[-20:]}" # Unique key per file
+        )
+    except Exception as e:
+        st.caption(f"Could not load resume: {e}")
 
 
 # Tab 1 overview
@@ -335,7 +376,7 @@ def show_applicants_tab(employer_id):
                                     to_name=seeker_name,
                                     job_title=job["title"],
                                     company=job["company"]
-                            )
+                                )
                             if email_success:
                                 st.info(f"Rejected. Notification sent to {seeker_email}.")
                             else:
