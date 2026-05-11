@@ -341,7 +341,49 @@ def extract_job_role(text: str) -> str:
 
 
 def extract_job_skills(job_description: str, job_requirements: str) -> list:
-    pass
+    """
+    Extracts required skills from the job description and requirements text.
+    Uses the same KNOWN_SKILLS dictionary so bath side speak the same language.
+    Returns a list of skills the job is asking for
+    """
+    combined_text = f"{job_description} {job_requirements}".lower()
+    required = []
+
+    for skill in KNOWN_SKILLS:
+        if " " in skill:
+            if skill in combined_text:
+                required.append(skill)
+
+        else:
+            pattern = r"\b" + re.escape(skill) + r"\b"
+            if re.search(pattern, combined_text):
+                required.append(skill)
+
+    return required
+
+
+def compute_skill_overlap(resume_skills: list, job_skill: list) -> float:
+    """
+    Computes what percentage of required job skills the resume covers.
+
+    Example:
+        JOb needs : ["python", "sql", "tensorflow", "aws"]
+        Resume has : ["python", "sql", "excel"]
+        Overlap : [2/4 = 50%]
+
+    Returns a float between 0.0 and 1.0
+    """
+    if not job_skill:
+        "Job has no detectable skills - can't penalise, return neutral"
+        return .5
+
+    resume_set = set(s.lower() for s in resume_skills)
+    job_set = set(s.lower() for s in job_skill)
+
+    matched = resume_set.intersection(job_set)
+    overlap = len(matched) / len(job_set)
+
+    return overlap
 
 
 # MAIN PARSE FUNCTION
