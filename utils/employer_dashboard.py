@@ -81,12 +81,12 @@ def show_resume_download(resume_path: str, seeker_name: str):
         filename = f"resume_{safe_name}.pdf"
 
         st.download_button(
-            label = "Download Resume",
-            data = pdf_bytes,
-            filename = filename,
+            label="Download Resume",
+            data=pdf_bytes,
+            filename=filename,
             mime="application/pdf",
             use_container_width=True,
-            key=f"dl_{resume_path[-20:]}" # Unique key per file
+            key=f"dl_{resume_path[-20:]}"  # Unique key per file
         )
     except Exception as e:
         st.caption(f"Could not load resume: {e}")
@@ -191,6 +191,7 @@ def show_overview_tab(employer_id):
                         st.session_state[delete_key] = True
                         st.rerun()
 
+
 # Edit Job Form
 def show_edit_job_form(employer_id):
     """
@@ -217,12 +218,12 @@ def show_edit_job_form(employer_id):
 
             description = st.text_area(
                 "Job Description *",
-                value = job_data.get("description", ""),
+                value=job_data.get("description", ""),
                 height=160
             )
             requirements = st.text_area(
                 "Requirements *",
-                value= job_data.get("requirements", ""),
+                value=job_data.get("requirements", ""),
                 height=130
             )
 
@@ -248,14 +249,15 @@ def show_edit_job_form(employer_id):
                 requirements=requirements.strip(),
                 salary=salary.strip()
             )
-            st.session_state.pop("editing_job_id",   None)
+            st.session_state.pop("editing_job_id", None)
             st.session_state.pop("editing_job_data", None)
             st.success("Job updated successfully!")
             st.rerun()
     if cancel:
-        st.session_state.pop("editing_job_id",   None)
+        st.session_state.pop("editing_job_id", None)
         st.session_state.pop("editing_job_data", None)
         st.rerun()
+
 
 # Tab 2 Post A job
 def show_post_job_tab(employer_id):
@@ -380,6 +382,7 @@ def show_applicants_tab(employer_id):
         ml_label = app["ml_label"] or "Not scored yet"
         status = app["status"]
         app_id = app["id"]
+        resume_path = app["resume_path"]
 
         # score display - coloured number
         score_display = f"{ai_score:.0f}/100" if ai_score is not None else "Pending"
@@ -396,7 +399,7 @@ def show_applicants_tab(employer_id):
             with col1:
                 st.markdown(f"**Email:** {seeker_email}")
                 st.markdown(f"** Applied:** {str(app['applied_at'])[:10]}")
-                st.markdown(f"**Current status:** `{status.upper()}`")
+                st.markdown(f"**status:** `{status.upper()}`")
 
                 # show AI score as a coloured progress bar
                 if ai_score is not None:
@@ -410,10 +413,6 @@ def show_applicants_tab(employer_id):
                         unsafe_allow_html=True
                     )
 
-                # show resume path if exists
-                if app["resume_path"]:
-                    st.markdown(f"**Resume file:** `{app['resume_path']}`")
-
                 # Parse and display screening question answers
                 if app["answers"]:
                     st.markdown("**Screening answers:**")
@@ -425,6 +424,11 @@ def show_applicants_tab(employer_id):
                         st.markdown(f"_{app['answers']}_")
 
             with col2:
+                st.markdown("**Resume**")
+                show_resume_download(resume_path, seeker_name)
+
+                st.divider()
+
                 st.markdown("**Decision**")
 
                 # Only show action buttons if still pending
