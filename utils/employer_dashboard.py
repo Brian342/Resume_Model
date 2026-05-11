@@ -146,22 +146,49 @@ def show_overview_tab(employer_id):
                 st.markdown(f"**Location:** {job['location']}")
                 st.markdown(f"**Salary:** {job['salary'] or 'Not specified'}")
                 st.markdown(f"**Posted:** {str(job['created_at'])[:10]}")
-
-                # Count applicants for this specific job
-                apps = get_applications_by_job(job["id"])
                 st.markdown(f"**Applicants:** {len(apps)}")
 
             with col2:
                 # Toggle active/paused - lets employer hide a job without deleting it
                 if job["is_active"]:
-                    if st.button("Paused listing", key=f"Pause_{job['id']}"):
+                    if st.button("Paused listing", key=f"Pause_{job['id']}", use_container_width=True):
                         toggle_job_active(job["id"], 0)
                         st.success("Job Paused.")
                         st.rerun()
                 else:
-                    if st.button("Re-activate", key=f"active_{job['id']}"):
+                    if st.button("Re-activate", key=f"active_{job['id']}", use_container_width=True):
                         toggle_job_active(job["id"], 1)
                         st.success("Job re-activated.")
+                        st.rerun()
+
+                # Edit Button
+                if st.button("Edit", key=f"edit_{job['id']}", use_container_width=True):
+                    st.session_state["editing_job_id"] = job["id"]
+                    st.session_state["editing_job_data"] = dict(job)
+                    st.rerun()
+
+                # Delete button
+                # 2-step: first click set a flag, second click confirms
+                delete_key = f"confirm_delete_{job['id']}"
+
+                if st.session_state.get(delete_key):
+                    # Confirmation step - shown after first click
+                    st.warning("Are you sure? This deletes the job and All applications!!.")
+                    col_yes, col_no = st.columns(2)
+                    with col_yes:
+                        if st.button("Yes, Delete", key=f"yes_{job['id']}", type="primary", use_container_width=True):
+                            delete_job(job["id"])
+                            st.session_state.pop(delete_key, None)
+                            st.success("job deleted.")
+                            st.rerun()
+                    with col_no:
+                        if st.button("Cancel", key=f"no_{job['id']}", use_container_width=True):
+                            st.session_state.pop(delete_key, None)
+                            st.rerun()
+                else:
+                    if st.button("Delete", key=f"delete_{job['id']}", use_container_width=True):
+                        # First click - set confirmation flag
+                        st.session_state[delete_key] = True
                         st.rerun()
 
 
