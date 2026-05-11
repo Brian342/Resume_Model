@@ -124,13 +124,22 @@ def show_overview_tab(employer_id):
 
     if not jobs:
         st.info("You haven't posted any jobs yet. Go to the **Post a Job** tab to get started.")
-
         return
+
+    # Edit form (shown above the list when editing)
+    # We store the job being edited in session_state["editing_job_id"]
+    # When set, we show the edit form at the top of this tab.
+    if st.session_state.get("editing_job_id"):
+        show_edit_job_form(employer_id)
+        st.divider()
+
     for job in jobs:
         # st.expander creates a collapsible section
         # The label shows the job title and its active/paused status
         status_badge = "Active" if job["is_active"] else "Paused"
-        with st.expander(f"{job['title']} - {job['company']} | {status_badge}"):
+        apps = get_applications_by_job(job["id"])
+
+        with st.expander(f"{job['title']} - {job['company']} | {status_badge} | {len(apps)} applicant(s)"):
 
             col1, col2 = st.columns([3, 1])
             with col1:
