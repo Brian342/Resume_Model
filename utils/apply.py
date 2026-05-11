@@ -62,43 +62,89 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # AI SCORE PLACEHOLDER
-def score_resume(parsed_resume: dict) -> tuple:
+def score_resume(parsed_resume: dict, job=None) -> tuple:
     """
-        Takes the parsed resume dict from resume_parser.parse_resume()
-        and returns a real ML score using the trained model.
+        Scores a resume against a specific job.
 
-        parsed_resume: dict returned by parse_resume()
-        Returns: (score: float 0-100, label: str)
+        HOW THE COMBINED SCORE WORKS:
+        ml_score      — how good the resume is in general (0-100)
+        overlap_score — what % of job's required skills the resume has (0-1)
+
+        final_score = (ml_score × 0.4) + (overlap_score × 100 × 0.6)
+
+        The overlap is weighted 60% because job-skill match is more
+        important than general resume quality for a specific role.
+
+        If no job is provided, falls back to ml_score only.
     """
+    from resume_parser import extract_job_skills, compute_skill_overlap
+
+    # Step 1: Get the base ML Score
     if not MODEL_LOADED or _model_bundle is None:
         skills_count = parsed_resume.get("skill_count", 0)
         exp_years = parsed_resume.get("experience_years", 0)
-        fallback_score = min(100, skills_count * 8 + exp_years * 5)
-        fallback_label = (
-            "Qualified" if fallback_score >= 65 else
-            "Review Needed" if fallback_score >= 40 else
-            "Not Qualified"
+        ml_score = min(100, skills_count * 8 + exp_years * 5)
+    else:
+        resume_data = {
+            "skills": parsed_resume["skills"],
+            "experience_years": parsed_resume["experience_years"],
+            "education": parsed_resume["education"],
+            "certifications": parsed_resume["certifications"],
+            "job_role": parsed_resume["job_role"],
+            "projects_count": parsed_resume["projects_count"],
+            "Education": parsed_resume["education"],
+            "Certifications": parsed_resume["certifications"],
+            "Job Role": parsed_resume["job_role"],
+        }
+        try:
+            from train_model import predict_single
+            ml_score, _ = predict_single(_model_bundle, resume_data)
+        except Exception as e:
+            ml_score = .0
+
+    # Step 2: Compute job-skill overlap
+    if job is not None:
+        job_skills = extract_job_skills(
+            job["description"],
+            job["requirements"]
         )
-        return float(fallback_score), f"{fallback_label} (model not loaded)"
+        resume_skills = parsed_resume.get("skills_list", [])
+        overlap = compute_skill_overlap(resume_skills, job_skills)
 
-    resume_data = {
-        "skills": parsed_resume["skills"],
-        "experience_years": parsed_resume["experience_years"],
-        "education": parsed_resume["education"],
-        "certifications": parsed_resume["certifications"],
-        "job_role": parsed_resume["job_role"],
-        "projects_count": parsed_resume["projects_count"],
-        "Education": parsed_resume["education"],
-        "Certifications": parsed_resume["certifications"],
-        "Job Role": parsed_resume["job_role"],
-    }
+        # Show which skills matched and which were missing
+        # stored in session_state so the UI can display them
+        matched_skills = list(
+            set(s.lower() for s in resume_skills)
+            .intersection(set(s.lower() for s in job_skills))
+        )
+        missing_skills = list(
+            set(s.lower() for s in job_skills)
+            - set(s.lower() for s in resume_skills)
+        )
+        st.session_state["matched_skills"] = matched_skills
+        st.session_state["missing_skills"] = missing_skills
+        st.session_state["job_skills"] = job_skills
 
-    try:
-        from train_model import predict_single
-        score, label = predict_single(_model_bundle, resume_data)
-        return float(score), label
-    except Exception as e:
-        return .0, f"Scoring error: {str(e)}"
+        # Step 3: Combine ML score + overlap score
+        # 40% general ML quality + 60% job-specific skill match
+        final_score = round((ml_score * .4) + (overlap * 100 * .6), 1)
+
+    else:
+        # No job context - use ML score only
+        final_score = round(ml_score, 1)
+        overlap = None
+        matched_skills = []
+        missing_skills = []
+
+    # Step 4: Assign Label
+    if final_score >= 65:
+        label = "Qualified"
+    elif final_score >= 40:
+        label = "Review Needed"
+    else:
+        label = "Not Qualified"
+
+    return float(final_score), label
 
 
 # PDF Text Extractor
@@ -403,7 +449,7 @@ def show_application_form(job, seeker_id: int):
         # Score with Real ML
         with st.spinner("Scoring Your Resume..."):
             if final_parsed:
-                score, label = score_resume(final_parsed)
+                score, label = score_resume(final_parsed, job=job)
             else:
                 score, label = .0, "No resume data"
 
