@@ -393,5 +393,37 @@ def has_applied(job_id, seeker_id):
     return result is not None
 
 
+def delete_job(job_id: int):
+    """
+    Permanently deletes a job and All its applications
+    Called from employer_dashboard when employer confirms deletion.
+
+    We delete applications first because of the REFERENCES constraint
+    SQLITE won't let you delete a job that has applications pointing to it.
+    """
+    conn = get_connection()
+    conn.execute("DELETE FROM applications WHERE job_id =?", (job_id,))
+    conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+    conn.commit()
+    conn.close()
+
+
+def update_job(job_id: int, title: str, company: str, location: str,
+               description: str, requirements: str, salary: str):
+    """
+    Updates an existing job posting with new values.
+    Called from employer_dashboard when employer saves edits
+    """
+    conn = get_connection()
+    conn.execute("""
+    UPDATE jobs
+        SET title=?, company=?, location=?,
+            description=?, requirements=?, salary=?
+        WHERE id=?
+    """, (title, company, location, description, requirements, salary, job_id))
+    conn.commit()
+    conn.close()
+
+
 # Initialise On Import
 create_table()
