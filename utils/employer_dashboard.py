@@ -214,6 +214,49 @@ def show_edit_job_form(employer_id):
         with col2:
             location = st.text_input("Location *", value=job_data.get("location", ""))
             salary = st.text_input("Salary/Range", value=job_data.get("salary", "") or "")
+
+            description = st.text_area(
+                "Job Description *",
+                value = job_data.get("description", ""),
+                height=160
+            )
+            requirements = st.text_area(
+                "Requirements *",
+                value= job_data.get("requirements", ""),
+                height=130
+            )
+
+            col_save, col_cancel = st.columns(2)
+            with col_save:
+                save = st.form_submit_button(
+                    "Save Changes", type="primary", use_container_width=True
+                )
+            with col_cancel:
+                cancel = st.form_submit_button(
+                    "Cancel", use_container_width=True
+                )
+    if save:
+        if not all([title, company, location, description, requirements]):
+            st.error("Please fill in all required fields.")
+        else:
+            update_job(
+                job_id=st.session_state["editing_job_id"],
+                title=title.strip(),
+                company=company.strip(),
+                location=location.strip(),
+                description=description.strip(),
+                requirements=requirements.strip(),
+                salary=salary.strip()
+            )
+            st.session_state.pop("editing_job_id",   None)
+            st.session_state.pop("editing_job_data", None)
+            st.success("Job updated successfully!")
+            st.rerun()
+    if cancel:
+        st.session_state.pop("editing_job_id",   None)
+        st.session_state.pop("editing_job_data", None)
+        st.rerun()
+
 # Tab 2 Post A job
 def show_post_job_tab(employer_id):
     """
