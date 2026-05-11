@@ -454,6 +454,30 @@ def save_seeker_preferences(seeker_id: int, categories: str, keywords: str):
     conn.close()
 
 
+def get_seeker_preferences(seeker_id: int) -> dict:
+    """
+    Fetches a seeker's saved job preferences.
+    Returns dict with categories list and keywords list.
+    """
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT job_categories, job_keywords FROM users WHERE id = ?",
+            (seeker_id,)
+        ).fetchone()
+    except Exception:
+        conn.close()
+        return {"categories": [], "keywords": []}
+
+    conn.close()
+
+    if not row:
+        return {"categories": [], "keywords": []}
+
+    categories = [c.strip() for c in (row["job_categories"] or ""). split(",") if c.strip()]
+    keywords = [k.strip() for k in (row["job_keywords"] or "").split(",") if k.strip()]
+
+    return {"categories": categories, "keywords": keywords}
 
 
 # Initialise On Import
