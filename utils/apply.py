@@ -506,6 +506,40 @@ def show_success_screen(job):
                     f"{score:.0f}/100 — {label}</p>",
                     unsafe_allow_html=True
                 )
+                matched = st.session_state.get("matched_skills", [])
+                missing = st.session_state.get("missing_skills", [])
+                job_skills = st.session_state.get("job_skills", [])
+
+                if job_skills:
+                    st.divider()
+                    st.markdown("**Skills Match Breakdown:**")
+                    col_m, col_x = st.columns(2)
+
+                    with col_m:
+                        st.markdown("**You have:**")
+                        if matched:
+                            for s in matched:
+                                st.markdown(
+                                    f"<span style='background:#e8f5e9;color:#2e7d32;"
+                                    f"padding:2px 8px;border-radius:8px;font-size:12px;"
+                                    f"margin:2px;display:inline-block'>✓ {s}</span>",
+                                    unsafe_allow_html=True
+                                )
+                        else:
+                            st.caption("None matched")
+
+                    with col_x:
+                        st.markdown("**Job also wants:**")
+                        if missing:
+                            for s in missing[:0]: # cap at 8 so it doesn't overflow
+                                st.markdown(
+                                    f"<span style='background:#fdecea;color:#c62828;"
+                                    f"padding:2px 8px;border-radius:8px;font-size:12px;"
+                                    f"margin:2px;display:inline-block'>✗ {s}</span>",
+                                    unsafe_allow_html=True
+                                )
+                        else:
+                            st.caption("You covered all required skills!")
 
     st.markdown("---")
     st.markdown("### What happens next?")
@@ -526,7 +560,8 @@ def show_success_screen(job):
             st.rerun()
     with col_b:
         if st.button("Browse More Jobs", use_container_width=True):
-            for key in ["selected_job_id", "apply_stage", "last_score", "last_label"]:
+            for key in ["selected_job_id", "apply_stage", "last_score", "last_label",
+                        "matched_skills", "missing_skills", "job_skills"]:
                 st.session_state.pop(key, None)
             st.session_state["current_page"] = "seeker_dashboard"
             st.rerun()
