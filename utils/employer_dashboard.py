@@ -191,7 +191,29 @@ def show_overview_tab(employer_id):
                         st.session_state[delete_key] = True
                         st.rerun()
 
+# Edit Job Form
+def show_edit_job_form(employer_id):
+    """
+    Shows a pre-filled form to edit an existing job.
+    Triggered when employer clicks Edit on a job card.
 
+    The form is pre-filled with the job's current values from
+    session_state["editing_job_data"] so the employer can see
+    what is already there and only change what they want.
+    """
+    job_data = st.session_state.get("editing_job_data", {})
+
+    st.markdown("### Edit Job Posting")
+
+    with st.form("edit_job_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            title = st.text_input("Job Title *", value=job_data.get("title", ""))
+            company = st.text_input("Company Name *", value=job_data.get("company", ""))
+
+        with col2:
+            location = st.text_input("Location *", value=job_data.get("location", ""))
+            salary = st.text_input("Salary/Range", value=job_data.get("salary", "") or "")
 # Tab 2 Post A job
 def show_post_job_tab(employer_id):
     """
