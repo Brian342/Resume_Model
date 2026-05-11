@@ -425,5 +425,36 @@ def update_job(job_id: int, title: str, company: str, location: str,
     conn.close()
 
 
+def save_seeker_preferences(seeker_id: int, categories: str, keywords: str):
+    """
+    Saves a seeker's job category preferences.
+    categories : comma-separated string e.g. "Technology,Data Science"
+    keywords   : comma-separated string e.g. "python,machine learning"
+
+    We store in the users table by adding preference columns.
+    Uses INSERT OR REPLACE pattern to upsert safely.
+    """
+    conn = get_connection()
+    # Add columns if they don't exist yet - safe to run multiple times
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN job_categories TEXT DEFAULT ''")
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN job_keywords TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    conn.execute("""
+        UPDATE users
+        SET job_categories = ?, job_keywords = ?
+        WHERE id = ?
+    """, (categories, keywords, seeker_id))
+    conn.commit()
+    conn.close()
+
+
+
+
 # Initialise On Import
 create_table()
