@@ -512,7 +512,11 @@ def show_application_form(job, seeker_id: int):
         if any(w in text for w in ["software", "developer", "engineer", "programming",
                                    "web", "mobile", "backend", "frontend", "full stack"]):
             return "software"
-        if
+        if any(w in text for w in ["data scientist", "machine learning", "data analyst",
+                                   "nlp", "deep learning", "data engineer", "bi ", "analytics"]):
+            return "data"
+        if any(w in text for w in ["security", "cyber", "penetration", "soc ", "siem", "ethical hack"]):
+            return "cybersecurity"
 
 
     with st.container(border=True):
