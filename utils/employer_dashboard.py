@@ -80,13 +80,15 @@ def show_resume_download(resume_path: str, seeker_name: str, app_id: int = None)
         safe_name = seeker_name.replace(" ", "_").lower()
         filename = f"resume_{safe_name}.pdf"
 
+        # Use app_id for a guaranteed-unique key: fail back to path bash if not provided
+        unique_key = f"dl_{app_id}" if app_id is not None else f"dl_{abs(hash(resume_path))}"
         st.download_button(
             label="Download Resume",
             data=pdf_bytes,
             file_name=filename,
             mime="application/pdf",
             use_container_width=True,
-            key=f"dl_{resume_path[-20:]}"  # Unique key per file
+            key=unique_key  # Unique key per file
         )
     except Exception as e:
         st.caption(f"Could not load resume: {e}")
