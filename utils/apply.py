@@ -517,6 +517,10 @@ def show_application_form(job, seeker_id: int):
             return "data"
         if any(w in text for w in ["security", "cyber", "penetration", "soc ", "siem", "ethical hack"]):
             return "cybersecurity"
+        if any(w in text for w in ["network", "infrastructure", "cisco", "devops", "cloud engineer",
+                                   "systems admin", "sysadmin"]):
+            return "networking"
+
 
 
     with st.container(border=True):
