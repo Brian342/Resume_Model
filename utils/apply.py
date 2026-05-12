@@ -505,6 +505,15 @@ def show_application_form(job, seeker_id: int):
         ],
     }
 
+    def _detect_job_category(job) -> str:
+        """Map the job title/description to a question bank key."""
+        text = (job["title"] + " " + job["description"] + " " + job["requirements"]).lower()
+
+        if any(w in text for w in ["software", "developer", "engineer", "programming",
+                                   "web", "mobile", "backend", "frontend", "full stack"]):
+            return "software"
+        if
+
 
     with st.container(border=True):
         st.markdown(
