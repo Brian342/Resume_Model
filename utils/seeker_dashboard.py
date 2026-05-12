@@ -318,7 +318,7 @@ def show_browse_jobs_tab(seeker_id: int):
 
     def job_matches_preferences(job) -> bool:
         """Returns True if the job matches any of the seeker's preferences"""
-        pass
+
 
     # search bar
     # simple client-side filter - no extra DB call needed
