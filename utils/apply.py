@@ -376,6 +376,136 @@ def show_application_form(job, seeker_id: int):
 
     # SECTION 3: AI Interview Question Placeholder
     st.markdown("### AI-Generated Interview Question")
+    st.markdown(
+        "Answer **5 questions** tailored to this specific role. "
+        "Your responses will be reviewed by the employer alongside your resume."
+    )
+    # QUESTION BANK keyed by job category
+    QUESTION_BANK = {
+        "software": [
+            "Describe a challenging bug you encountered and how you debugged and resolved it.",
+            "Explain the difference between object-oriented and functional programming with examples from your "
+            "experience.",
+            "How do you ensure code quality and maintainability on a team project?",
+            "Walk us through how you would design a RESTful API for a simple e-commerce platform.",
+            "What is your approach to version control and branching strategies in a collaborative codebase?",
+            "Describe a time you had to refactor a large codebase. What was your process?",
+            "How do you stay current with new programming languages, frameworks, and best practices?",
+            "Explain the concept of CI/CD and how you have implemented or worked within a pipeline.",
+            "What testing strategies do you use and why? (unit, integration, end-to-end)",
+            "Describe a project where you had to optimise for performance. What bottlenecks did you find?",
+        ],
+        "data": [
+            "Describe a data pipeline you have built from ingestion to visualisation.",
+            "How do you handle missing data in a dataset? Walk through your decision process.",
+            "Explain the difference between supervised and unsupervised learning with a real-world example.",
+            "Describe a machine learning model you deployed. What challenges did you face in production?",
+            "How do you evaluate whether a model is overfitting or underfitting, and what do you do about it?",
+            "Walk us through how you would approach a new classification problem from scratch.",
+            "What metrics would you use to evaluate a recommendation system, and why?",
+            "Describe a time you communicated complex data findings to a non-technical stakeholder.",
+            "How do you ensure data integrity and reproducibility in your analyses?",
+            "What is your experience with cloud data platforms such as BigQuery, Redshift, or Databricks?",
+        ],
+        "cybersecurity": [
+            "Describe the steps you would take when responding to a suspected data breach.",
+            "What is the difference between a vulnerability assessment and a penetration test?",
+            "How would you explain the concept of zero-trust architecture to a non-technical manager?",
+            "Describe a time you identified a security vulnerability and how you handled it responsibly.",
+            "What tools and techniques do you use for network monitoring and intrusion detection?",
+            "Explain the OWASP Top 10 and give an example of how you have mitigated one of those risks.",
+            "How do you stay updated on emerging threats and CVEs?",
+            "What is your approach to security hardening a new server or cloud environment?",
+            "Describe your experience with security information and event management (SIEM) platforms.",
+            "How do you balance security requirements with usability and developer productivity?",
+        ],
+        "networking": [
+            "Explain the OSI model and describe a real networking problem you solved using it.",
+            "How would you troubleshoot a situation where users in one office subnet cannot reach a shared drive?",
+            "Describe your experience designing or maintaining a network for high availability.",
+            "What is your approach to capacity planning for network infrastructure?",
+            "How have you used automation or infrastructure-as-code in your networking work?",
+            "Describe a major network outage you were involved in resolving. What was the root cause?",
+            "What is your experience with cloud networking (VPCs, VPNs, AWS/Azure/GCP networking)?",
+            "Explain the difference between BGP and OSPF routing protocols and when you would use each.",
+            "How do you approach network security — segmentation, firewall rules, and access control?",
+            "What monitoring tools do you rely on for network health and performance?",
+        ],
+        "hr": [
+            "Describe your end-to-end recruitment process for a hard-to-fill technical role.",
+            "How do you handle a situation where a line manager and HR policy are in conflict?",
+            "What strategies have you used to improve employee retention and reduce turnover?",
+            "Describe how you have built or improved an onboarding programme.",
+            "How do you ensure fairness and reduce bias during the interview and selection process?",
+            "Describe a difficult performance management case you handled and how you resolved it.",
+            "What is your experience with HR information systems (HRIS) and payroll platforms?",
+            "How do you keep up with changes in labour law and ensure compliance?",
+            "Describe how you have supported diversity, equity, and inclusion initiatives.",
+            "How do you measure the effectiveness of an HR programme or initiative?",
+        ],
+        "finance": [
+            "Walk us through how you would build a three-statement financial model from scratch.",
+            "Describe a time you identified a significant financial discrepancy and how you resolved it.",
+            "How do you approach variance analysis between actual and budgeted figures?",
+            "What is your experience with financial forecasting and scenario planning?",
+            "Describe your audit experience — internal, external, or both.",
+            "How do you ensure accuracy and data integrity when working with large financial datasets?",
+            "Explain the difference between cash-basis and accrual accounting and when each is appropriate.",
+            "What accounting standards are you most familiar with (IFRS, GAAP, local GAAP)?",
+            "How have you contributed to cost-reduction or efficiency improvement initiatives?",
+            "Describe a time you presented complex financial information to senior leadership.",
+        ],
+        "marketing": [
+            "Describe a marketing campaign you led from strategy to execution. What were the results?",
+            "How do you define and segment your target audience for a new product launch?",
+            "What metrics do you track to evaluate the success of a digital marketing campaign?",
+            "Describe your experience with SEO — both on-page and off-page strategies.",
+            "How do you build and maintain a brand voice consistently across different channels?",
+            "Describe a time a campaign underperformed. How did you diagnose the problem and pivot?",
+            "What CRM tools have you worked with and how have you used data to personalise outreach?",
+            "How do you approach content strategy for thought leadership?",
+            "Describe your experience managing a marketing budget and allocating spend across channels.",
+            "How do you balance short-term performance marketing goals with long-term brand building?",
+        ],
+        "operations": [
+            "Describe a process improvement initiative you led and the measurable impact it had.",
+            "How do you prioritise competing operational tasks when resources are constrained?",
+            "Describe your experience with project management methodologies (Agile, PMP, PRINCE2, etc.).",
+            "How do you build relationships with suppliers and manage vendor performance?",
+            "Describe a time a key operational process failed. What was your response?",
+            "How have you used data or KPIs to drive operational decisions?",
+            "What is your experience managing cross-functional teams or projects?",
+            "Describe how you have managed change within an organisation.",
+            "How do you approach risk management in a complex operational environment?",
+            "What tools do you use for project tracking, reporting, and team collaboration?",
+        ],
+        "design": [
+            "Walk us through your design process from brief to final delivery.",
+            "How do you incorporate user research and feedback into your design decisions?",
+            "Describe a project where you had to balance aesthetics with technical or business constraints.",
+            "How do you handle feedback or critique from stakeholders who want changes you disagree with?",
+            "What design tools and prototyping software are you most proficient in?",
+            "Describe your experience with design systems or component libraries.",
+            "How do you ensure accessibility standards are met in your designs?",
+            "Describe a time you had to design under a very tight deadline. How did you manage it?",
+            "How do you approach responsive design across different device sizes?",
+            "What is your process for handing off designs to developers and ensuring accurate implementation?",
+        ],
+        "general": [
+            "Tell us about a professional achievement you are most proud of and why.",
+            "Describe a situation where you had to learn a new skill quickly under pressure.",
+            "How do you manage competing priorities and deadlines?",
+            "Describe a time you had a conflict with a colleague. How did you resolve it?",
+            "What does success look like to you in this role after the first 90 days?",
+            "Where do you see your career heading in the next three to five years?",
+            "Describe your ideal work environment and team culture.",
+            "How do you handle constructive criticism or negative feedback?",
+            "Tell us about a time you went above and beyond what was expected of you.",
+            "What motivates you to do your best work?",
+        ],
+    }
+
+
     with st.container(border=True):
         st.markdown(
             "<div style='background:#f0f4ff;padding:16px;border-radius:8px;"
