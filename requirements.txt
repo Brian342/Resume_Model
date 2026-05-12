@@ -1,34 +1,11 @@
-# ============================================================
-#  requirements.txt — Pioneer Insurance Group Job Match App
-#  Install: pip install -r requirements.txt
-#  Deploy:  Streamlit Cloud reads this file automatically
-# ============================================================
-
-# ── Web Framework ────────────────────────────────────────────
 streamlit>=1.35.0
-
-# ── Password Hashing ─────────────────────────────────────────
 bcrypt>=4.1.3
-
-# ── Data & ML ────────────────────────────────────────────────
 pandas>=2.2.0
 numpy>=1.26.0
 scikit-learn>=1.4.0
 scipy>=1.13.0
 joblib>=1.4.0
-
-# ── Charts & Visualisation ───────────────────────────────────
 plotly>=5.22.0
-
-# ── PDF Parsing ──────────────────────────────────────────────
 PyPDF2>=3.0.1
 pdfplumber>=0.11.0
-
-# ── Environment Variables (.env file support) ─────────────────
 python-dotenv>=1.0.1
-
-# ============================================================
-#  Standard-library modules used in the project (NO install needed):
-#    collections, datetime, email, io, itertools,
-#    json, os, pathlib, random, re, smtplib, sqlite3, ssl
-# ============================================================
