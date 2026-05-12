@@ -618,7 +618,7 @@ def show_application_form(job, seeker_id: int):
     general_pool = QUESTION_BANK["general"]
 
     # Combine and deduplicate, then pick 5
-    combined = list(dict.fromkeys(category_pool + general_pool)) # Preserve order, no dups
+    combined = list(dict.fromkeys(category_pool + general_pool))  # Preserve order, no dups
 
     # Use job_id as seed so the same job always shows the same 5 questions
     rng = random.Random(job["id"])
