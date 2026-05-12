@@ -83,7 +83,7 @@ def show_resume_download(resume_path: str, seeker_name: str):
         st.download_button(
             label="Download Resume",
             data=pdf_bytes,
-            filename=filename,
+            file_name=filename,
             mime="application/pdf",
             use_container_width=True,
             key=f"dl_{resume_path[-20:]}"  # Unique key per file

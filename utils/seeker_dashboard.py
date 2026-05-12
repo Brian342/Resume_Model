@@ -24,6 +24,7 @@ import plotly.graph_objects as go
 from db import (
     get_seeker_stats,
     get_applications_by_seeker,
+    get_seeker_preferences,
     get_all_active_jobs,
     has_applied
 )
@@ -172,7 +173,7 @@ def show_overview_tab(seeker_id: int):
         legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=.5)
     )
 
-    col1, col2 = st.columns([1,1])
+    col1, col2 = st.columns([1, 1])
     with col1:
         st.plotly_chart(fig, use_container_width=True)
     with col2:
@@ -183,7 +184,8 @@ def show_overview_tab(seeker_id: int):
         if stats["pending"] > 0:
             st.info(f"**{stats['pending']}** application(s) are still under review.")
         if stats["rejected"] > 0:
-            st.warning(f"Keep going! **{stats['rejected']}** application(s) were unsuccessful - more opportunities await.")
+            st.warning(
+                f"Keep going! **{stats['rejected']}** application(s) were unsuccessful - more opportunities await.")
 
 
 # Tab 2 My Applications
@@ -255,7 +257,7 @@ def show_my_applications_tab(seeker_id: int):
 
 
 # Tab 3 Browse Jobs
-def show_brose_jobs_tab(seeker_id: int):
+def show_browse_jobs_tab(seeker_id: int):
     """
     Displays all active job listings as cards in a 2-column grid
 
@@ -278,6 +280,46 @@ def show_brose_jobs_tab(seeker_id: int):
         st.info("No job listings available right now. check back soon!")
         return
 
+    # Load seeker preferences
+    prefs = get_seeker_preferences(seeker_id)
+    categories = [c.lower() for c in prefs["categories"]]
+    keywords = [k.lower() for k in prefs["keywords"]]
+
+    # Filter jobs by preference
+    # A job matches if its title OR description contains any preferred
+    # category word or keyword. We do a soft match so "Technology & Software"
+    # matches jobs with "software", "developer", "engineer" in the title
+
+    CATEGORY_KEYWORDS = {
+        "technology & software": ["software", "developer", "engineer",
+                                  "programming", "web", "mobile", "app"],
+        "data science & ai": ["data", "scientist", "machine learning",
+                              "ai", "analyst", "nlp", "deep learning"],
+        "cybersecurity": ["security", "cyber", "penetration",
+                          "ethical hacking", "soc", "siem"],
+        "networking & infrastructure": ["network", "infrastructure", "cisco",
+                                        "devops", "cloud", "systems admin"],
+        "human resources": ["hr", "human resource", "recruitment",
+                            "talent", "payroll", "people"],
+        "finance & accounting": ["finance", "accounting", "audit",
+                                 "financial", "tax", "budget"],
+        "marketing & sales": ["marketing", "sales", "brand",
+                              "digital marketing", "seo", "crm"],
+        "operations & management": ["operations", "manager", "management",
+                                    "logistics", "supply chain", "project"],
+        "design & creative": ["design", "creative", "ui", "ux",
+                              "graphic", "figma", "illustrator"],
+        "healthcare": ["health", "medical", "nurse", "doctor",
+                       "clinical", "pharmacy"],
+        "legal": ["legal", "lawyer", "attorney",
+                  "compliance", "paralegal"],
+        "other": [],
+    }
+
+    def job_matches_preferences(job) -> bool:
+        """Returns True if the job matches any of the seeker's preferences"""
+        pass
+
     # search bar
     # simple client-side filter - no extra DB call needed
     search = st.text_input(
@@ -291,8 +333,8 @@ def show_brose_jobs_tab(seeker_id: int):
         jobs = [
             j for j in jobs
             if search in j["title"].lower()
-            or search in j["company"].lower()
-            or search in j["location"].lower()
+               or search in j["company"].lower()
+               or search in j["location"].lower()
         ]
 
     if not jobs:
@@ -316,7 +358,7 @@ def show_brose_jobs_tab(seeker_id: int):
 
         for col, job in zip([col1, col2], [left_job, right_job]):
             if job is None:
-                continue # Last row with odd number of Jobs - leave right col empty
+                continue  # Last row with odd number of Jobs - leave right col empty
 
             with col:
                 with st.container(border=True):
@@ -356,10 +398,10 @@ def show_brose_jobs_tab(seeker_id: int):
                         # and navigates to the apply page
                         # key must be unique per job - we use the job ID
                         if st.button(
-                            "View & Apply",
-                            key=f"apply_btn_{job['id']}",
-                            use_container_width=True,
-                            type="primary"
+                                "View & Apply",
+                                key=f"apply_btn_{job['id']}",
+                                use_container_width=True,
+                                type="primary"
                         ):
                             # store which job they selected
                             st.session_state["selected_job_id"] = job["id"]
@@ -391,4 +433,4 @@ def show_seeker_dashboard():
         show_my_applications_tab(seeker_id)
 
     with tabs3:
-        show_brose_jobs_tab(seeker_id)
+        show_browse_jobs_tab(seeker_id)

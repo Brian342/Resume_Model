@@ -30,6 +30,7 @@ from db import get_user_by_email, create_user
 from employer_dashboard import show_employer_dashboard
 from seeker_dashboard import show_seeker_dashboard
 from apply import show_apply_page
+from db import save_seeker_preferences, get_seeker_preferences
 
 # Page Configuration
 st.set_page_config(
@@ -100,6 +101,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         plain_password.encode("utf-8"),
         hashed_password.encode("utf-8")
     )
+
 
 # This is a comment
 # Login Logic
@@ -296,6 +298,76 @@ def show_sidebar():
             do_logout()
 
 
+def show_preference_prompt():
+    """
+    Shown to seekers on first login OR when they click 'Update Preferences'
+    Lets them select job categories and keywords so the job board
+    only shows relevant jobs
+    """
+    prefs = get_seeker_preferences(st.session_state["user_id"])
+
+    # Job categories the seeker can pick from
+    ALL_CATEGORIES = [
+        "Technology & Software",
+        "Data Science & AI",
+        "Cybersecurity",
+        "Networking & Infrastructure",
+        "Human Resources",
+        "Finance & Accounting",
+        "Marketing & Sales",
+        "Operations & Management",
+        "Design & Creative",
+        "Healthcare",
+        "Legal",
+        "Other"
+    ]
+
+    st.markdown("### Set Your Job Preferences")
+    st.markdown(
+        "Select the types of jobs you are interested in."
+        "Your job board will only show matching listings"
+    )
+
+    selected_cats = st.multiselect(
+        "Job Categories (select all that apply)",
+        options=ALL_CATEGORIES,
+        default=prefs["categories"] if prefs["categories"] else [],
+        key="pref_categories"
+    )
+
+    keywords = st.text_input(
+        "Specific Skills or keywords (optional)",
+        value=", ".join(prefs["keywords"]),
+        placeholder="e.g. python, machine learning, remote",
+        key="pref_keywords",
+        help="Comma-separated. Jobs containing these words will be prioritised."
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Save Preferences", type="primary",
+                     use_container_width=True):
+            if not selected_cats:
+                st.warning("Please select at least one category.")
+            else:
+                kw_list = [k.strip() for k in keywords.split(",") if k.strip()]
+                save_seeker_preferences(
+                    seeker_id=st.session_state["user_id"],
+                    categories=", ".join(selected_cats),
+                    keywords=", ".join(kw_list)
+                )
+                st.session_state["show_preferences"] = False
+                st.session_state["current_page"] = "seeker_dashboard"
+                st.success("Preferences saved!")
+                st.rerun()
+
+    with col2:
+        if st.button("Skip for now", use_container_width=True):
+            st.session_state["show_preferences"] = False
+            st.session_state["current_page"] = "seeker_dashboard"
+            st.rerun()
+
+
 # MAIN ROUTER
 # ─────────────────────────────────────────────
 # This is where everything comes together.
@@ -324,10 +396,15 @@ def main():
 
         if page == "home":
             if role == "seeker":
-                st.title(f"Welcome Back, {name}!")
-                st.markdown(
-                    "Use the **Sidebar** to Navigate to your dashboard or browse available jobs."
-                )
+                prefs = get_seeker_preferences(st.session_state["user_id"])
+                if not prefs["categories"] or st.session_state.get("show_preferences"):
+                    show_preference_prompt()
+                else:
+                    st.title(f"Welcome Back, {name}!")
+                    st.markdown("Use the **sidebar** to navigate.")
+                    if st.button("Update Job Preferences"):
+                        st.session_state["show_preferences"]=True
+                        st.rerun()
             elif role == "employer":
                 st.title(f"Welcome Back, {name}!")
                 st.markdown(
