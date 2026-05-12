@@ -178,7 +178,7 @@ def show_overview_tab(employer_id):
                     st.warning("Are you sure? This deletes the job and All applications!!.")
                     col_yes, col_no = st.columns(2)
                     with col_yes:
-                        if st.button("Yes, Delete", key=f"yes_{job['id']}", type="primary", use_container_width=True):
+                        if st.button("Delete", key=f"yes_{job['id']}", type="primary", use_container_width=True):
                             delete_job(job["id"])
                             st.session_state.pop(delete_key, None)
                             st.success("job deleted.")
@@ -427,7 +427,7 @@ def show_applicants_tab(employer_id):
 
             with col2:
                 st.markdown("**Resume**")
-                show_resume_download(resume_path, seeker_name)
+                show_resume_download(resume_path, seeker_name, app_id=app_id)
 
                 st.divider()
 
