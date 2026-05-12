@@ -371,15 +371,16 @@ def show_browse_jobs_tab(seeker_id: int):
     ).lower()
 
     # Filter jobs based on the search term
+    display_jobs = filtered_jobs if categories else jobs
     if search:
-        jobs = [
-            j for j in jobs
+        display_jobs = [
+            j for j in display_jobs
             if search in j["title"].lower()
                or search in j["company"].lower()
                or search in j["location"].lower()
         ]
 
-    if not jobs:
+    if not display_jobs:
         st.info("No Jobs Match your Search. Try different keywords."
                 "Toggle 'Show all jobs' above or update your preferences from the home page.")
         return
