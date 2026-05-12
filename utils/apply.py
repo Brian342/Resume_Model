@@ -507,35 +507,109 @@ def show_application_form(job, seeker_id: int):
 
     def _detect_job_category(job) -> str:
         """Map the job title/description to a question bank key."""
-        text = (job["title"] + " " + job["description"] + " " + job["requirements"]).lower()
+        title = job["title"].lower()
+        full_text = (job["title"] + " " + job["description"] + " " + job["requirements"]).lower()
 
-        if any(w in text for w in ["software", "developer", "engineer", "programming",
-                                   "web", "mobile", "backend", "frontend", "full stack"]):
-            return "software"
-        if any(w in text for w in ["data scientist", "machine learning", "data analyst",
-                                   "nlp", "deep learning", "data engineer", "bi ", "analytics"]):
-            return "data"
-        if any(w in text for w in ["security", "cyber", "penetration", "soc ", "siem", "ethical hack"]):
-            return "cybersecurity"
-        if any(w in text for w in ["network", "infrastructure", "cisco", "devops", "cloud engineer",
-                                   "systems admin", "sysadmin"]):
-            return "networking"
-        if any(w in text for w in ["human resource", "hr ", "recruitment", "talent acquisition",
-                                   "payroll", "people operations"]):
+        if any(w in title for w in [
+            "hr", "human resource", "human resources", "recruitment",
+            "talent acquisition", "talent management", "payroll",
+            "people operations", "people ops", "hrbp",
+        ]):
             return "hr"
-        if any(w in text for w in ["finance", "accounting", "audit", "financial analyst",
-                                   "tax", "budget", "treasurer"]):
+        if any(w in title for w in [
+            "finance", "financial", "accounting", "accountant",
+            "audit", "auditor", "tax", "budget", "treasurer", "cfo",
+        ]):
             return "finance"
-        if any(w in text for w in ["marketing", "brand", "seo", "digital marketing",
-                                   "content", "campaign", "crm"]):
+
+        if any(w in title for w in [
+            "marketing", "brand", "seo", "digital marketing",
+            "content", "campaign", "crm", "growth",
+        ]):
             return "marketing"
-        if any(w in text for w in ["operations", "project manager", "supply chain", "logistics",
-                                   "procurement"]):
+
+        if any(w in title for w in [
+            "security", "cyber", "penetration", "soc", "siem", "ethical hack",
+        ]):
+            return "cybersecurity"
+
+        if any(w in title for w in [
+            "network", "networking", "infrastructure", "cisco",
+            "devops", "cloud engineer", "systems admin", "sysadmin", "network admin",
+        ]):
+            return "networking"
+
+        if any(w in title for w in [
+            "data scientist", "machine learning", "data analyst",
+            "nlp", "deep learning", "data engineer", "bi analyst", "analytics",
+        ]):
+            return "data"
+
+        if any(w in title for w in [
+            "software", "developer", "programmer", "web developer",
+            "mobile", "backend", "frontend", "full stack", "fullstack",
+        ]):
+            return "software"
+
+        if any(w in title for w in [
+            "operations", "project manager", "supply chain",
+            "logistics", "procurement", "operations manager",
+        ]):
             return "operations"
-        if any(w in text for w in ["design", "ui", "ux", "graphic", "figma", "creative",
-                                   "illustrator"]):
+
+        if any(w in title for w in [
+            "design", "designer", "ui", "ux", "graphic", "figma",
+            "creative", "illustrator",
+        ]):
             return "design"
-        return "general"
+
+            # ── FULL-TEXT fallback (lower priority, less specific) ────────────────
+            if any(w in full_text for w in [
+                "human resource", "hr manager", "hr officer", "recruitment",
+                "talent acquisition", "payroll", "people operations",
+            ]):
+                return "hr"
+            if any(w in full_text for w in [
+                "finance", "accounting", "audit", "financial analyst",
+                "tax", "budget", "treasurer",
+            ]):
+                return "finance"
+            if any(w in full_text for w in [
+                "marketing", "brand", "seo", "digital marketing",
+                "content strategy", "campaign", "crm",
+            ]):
+                return "marketing"
+            if any(w in full_text for w in [
+                "security", "cyber", "penetration", "soc ", "siem", "ethical hack",
+            ]):
+                return "cybersecurity"
+            if any(w in full_text for w in [
+                "network admin", "network engineer", "infrastructure",
+                "cisco", "devops", "cloud engineer", "systems admin", "sysadmin",
+            ]):
+                return "networking"
+            if any(w in full_text for w in [
+                "data scientist", "machine learning", "data analyst",
+                "nlp", "deep learning", "data engineer", "bi ", "analytics",
+            ]):
+                return "data"
+            if any(w in full_text for w in [
+                "software engineer", "software developer", "backend developer",
+                "frontend developer", "full stack", "mobile developer",
+            ]):
+                return "software"
+            if any(w in full_text for w in [
+                "operations manager", "project manager", "supply chain",
+                "logistics", "procurement",
+            ]):
+                return "operations"
+            if any(w in full_text for w in [
+                "ux designer", "ui designer", "graphic designer", "figma",
+                "creative director",
+            ]):
+                return "design"
+
+            return "general"
 
     # Seed questions from the detected category: pad with general if needed
     import random
@@ -656,7 +730,7 @@ def show_success_screen(job):
     st.balloons()
 
     col1, col2, col3 = st.columns([1, 2, 1])
-    with col1:
+    with col2:
         st.markdown(
             "<div style='text-align:center;padding:2rem 0'>"
             "<div style='font-size:64px'></div>"

@@ -394,7 +394,7 @@ def show_browse_jobs_tab(seeker_id: int):
     # jobs[1::2] -> every odd-indexed job (1, 3, 5 ...)
     # We use zip_longest from itertools to handle an odd number of jobs
     from itertools import zip_longest
-    pairs = list(zip_longest(jobs[0::2], jobs[1::2]))
+    pairs = list(zip_longest(display_jobs[0::2], display_jobs[1::2]))
 
     for left_job, right_job in pairs:
         col1, col2 = st.columns(2)
