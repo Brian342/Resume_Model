@@ -56,7 +56,7 @@ def score_color(score):
 
 
 # HELPER RESUME DOWNLOAD BUTTON
-def show_resume_download(resume_path: str, seeker_name: str):
+def show_resume_download(resume_path: str, seeker_name: str, app_id: int = None):
     """
     Reads the resume PDF from disk and renders a Streamlit
     download button so the employer can download it directly.

@@ -614,7 +614,7 @@ def show_application_form(job, seeker_id: int):
             "Most relevant experience": q2.strip(),
             "Years of experience": q3,
             "Availability to start": q4,
-            "AI interview question response": ai_answer.strip() or "Not answered",
+            **ai_answer,
         }
         answers_json = json.dumps(answers)
 
@@ -645,6 +645,8 @@ def show_application_form(job, seeker_id: int):
         st.session_state["last_score"] = score
         st.session_state["last_label"] = label
         st.session_state.pop("parsed_resume", None)
+        # Clear interview questions cache for this job
+        st.session_state.pop(f"interview_qs_{job['id']}", None)
         st.session_state["apply_stage"] = "success"
         st.rerun()
 
