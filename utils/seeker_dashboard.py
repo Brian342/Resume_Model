@@ -318,7 +318,49 @@ def show_browse_jobs_tab(seeker_id: int):
 
     def job_matches_preferences(job) -> bool:
         """Returns True if the job matches any of the seeker's preferences"""
-        pass
+        if not categories:
+            return True  # no preferences set - show all jobs
+
+        job_text = (
+            f"{job['title']} {job['description']} {job['requirements']}"
+        ).lower()
+
+        # Check category match
+        for cat in categories:
+            if cat == "other":
+                return True
+            cat_words = CATEGORY_KEYWORDS.get(cat, [])
+            if any(word in job_text for word in cat_words):
+                return True
+            # Direct category name match
+            if cat.replace(" & ", " ").replace("&", "") in job_text:
+                return True
+
+        # Check keyword match
+        for kw in keywords:
+            if kw in job_text:
+                return True
+
+        return False
+
+    # Apply filter
+    filtered_jobs = [j for j in jobs if job_matches_preferences(j)]
+
+    # Preference badge
+    if categories:
+        pref_text = " · ".join(prefs["categories"])
+        st.markdown(
+            f"<div style='background:#e8f4fd;border-radius:8px;padding:10px 16px;"
+            f"margin-bottom:12px;font-size:13px;color:#1565c0'>"
+            f"<b>Showing jobs matching:</b> {pref_text} &nbsp;"
+            f"<span style='color:#888'>({len(filtered_jobs)} of "
+            f"{len(jobs)} jobs)</span></div>",
+            unsafe_allow_html=True
+        )
+        # Let seeker toggle to see all jobs anyway
+        show_all = st.toggle("Show all jobs (ignore preferences)", value=False)
+        if show_all:
+            filtered_jobs = jobs
 
     # search bar
     # simple client-side filter - no extra DB call needed
@@ -338,7 +380,8 @@ def show_browse_jobs_tab(seeker_id: int):
         ]
 
     if not jobs:
-        st.info("No Jobs Match your Search. Try different keywords.")
+        st.info("No Jobs Match your Search. Try different keywords."
+                "Toggle 'Show all jobs' above or update your preferences from the home page.")
         return
 
     st.markdown(f"**{len(jobs)}** job(s) found")
@@ -350,7 +393,6 @@ def show_browse_jobs_tab(seeker_id: int):
     # jobs[1::2] -> every odd-indexed job (1, 3, 5 ...)
     # We use zip_longest from itertools to handle an odd number of jobs
     from itertools import zip_longest
-
     pairs = list(zip_longest(jobs[0::2], jobs[1::2]))
 
     for left_job, right_job in pairs:
@@ -405,7 +447,7 @@ def show_browse_jobs_tab(seeker_id: int):
                         ):
                             # store which job they selected
                             st.session_state["selected_job_id"] = job["id"]
-                            # Navigate to the apply page
+                            st.session_state["apply_stage"] = "detail"
                             st.session_state["current_page"] = "apply"
                             st.rerun()
 
