@@ -491,18 +491,18 @@ def show_application_form(job, seeker_id: int):
             "How do you approach responsive design across different device sizes?",
             "What is your process for handing off designs to developers and ensuring accurate implementation?",
         ],
-        # "general": [
-        #     "Tell us about a professional achievement you are most proud of and why.",
-        #     "Describe a situation where you had to learn a new skill quickly under pressure.",
-        #     "How do you manage competing priorities and deadlines?",
-        #     "Describe a time you had a conflict with a colleague. How did you resolve it?",
-        #     "What does success look like to you in this role after the first 90 days?",
-        #     "Where do you see your career heading in the next three to five years?",
-        #     "Describe your ideal work environment and team culture.",
-        #     "How do you handle constructive criticism or negative feedback?",
-        #     "Tell us about a time you went above and beyond what was expected of you.",
-        #     "What motivates you to do your best work?",
-        # ],
+        "general": [
+            "Tell us about a professional achievement you are most proud of and why.",
+            "Describe a situation where you had to learn a new skill quickly under pressure.",
+            "How do you manage competing priorities and deadlines?",
+            "Describe a time you had a conflict with a colleague. How did you resolve it?",
+            "What does success look like to you in this role after the first 90 days?",
+            "Where do you see your career heading in the next three to five years?",
+            "Describe your ideal work environment and team culture.",
+            "How do you handle constructive criticism or negative feedback?",
+            "Tell us about a time you went above and beyond what was expected of you.",
+            "What motivates you to do your best work?",
+        ],
     }
 
     def _detect_job_category(job) -> str:
