@@ -729,101 +729,88 @@ def show_application_form(job, seeker_id: int):
 def show_success_screen(job):
     st.balloons()
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown(
-            "<div style='text-align:center;padding:2rem 0'>"
-            "<div style='font-size:64px'></div>"
-            "<h2>Application Submitted!</h2>"
-            "</div>",
-            unsafe_allow_html=True
-        )
+    # Larger, more impactful header
+    st.markdown("<h1 style='text-align:center; padding-bottom: 20px;'>Application Submitted!</h1>",
+                unsafe_allow_html=True)
 
-        with st.container(border=True):
-            st.markdown(f"**Position:** {job['title']}")
-            st.markdown(f"**Company:** {job['company']}")
-            st.markdown(f"**Location:** {job['location']}")
+    with st.container(border=True):
+        # Top Row: Info and Skills
+        col_info, col_skills = st.columns([1, 1], gap="large")
+
+        with col_info:
+            st.markdown(f"### {job['title']}")
+            st.markdown(f"**{job['company']}** | {job['location']}")
 
             score = st.session_state.get("last_score")
             label = st.session_state.get("last_label")
 
             if score is not None:
-                st.divider()
-                colour = (
-                    "#2e7d32" if score >= 65 else
-                    "#e65100" if score >= 40 else
-                    "#c62828"
-                )
-                st.markdown("**Your ML Match Score:**")
+                st.write("")
+                colour = "#2e7d32" if score >= 65 else "#e65100" if score >= 40 else "#c62828"
+                st.markdown(f"#### Match Score: <span style='color:{colour}'>{score:.0f}/100</span>",
+                            unsafe_allow_html=True)
                 st.markdown(
-                    f"<div style='background:#e0e0e0;border-radius:8px;"
-                    f"height:16px;width:100%'>"
-                    f"<div style='background:{colour};width:{score}%;"
-                    f"height:16px;border-radius:8px'></div></div>"
-                    f"<p style='color:{colour};font-weight:700;"
-                    f"font-size:18px;margin-top:6px'>"
-                    f"{score:.0f}/100 — {label}</p>",
+                    f"<div style='background:#f0f2f6; border-radius:15px; height:20px; width:100%; margin-top:10px;'>"
+                    f"<div style='background:{colour}; width:{score}%; height:20px; border-radius:15px;'></div></div>",
                     unsafe_allow_html=True
                 )
-                matched = st.session_state.get("matched_skills", [])
-                missing = st.session_state.get("missing_skills", [])
-                job_skills = st.session_state.get("job_skills", [])
+                st.info(f"**Status:** {label}")
 
-                if job_skills:
-                    st.divider()
-                    st.markdown("**Skills Match Breakdown:**")
-                    col_m, col_x = st.columns(2)
+        with col_skills:
+            st.markdown("### Skills Analysis")
+            matched = st.session_state.get("matched_skills", [])
+            missing = st.session_state.get("missing_skills", [])
 
-                    with col_m:
-                        st.markdown("**You have:**")
-                        if matched:
-                            for s in matched:
-                                st.markdown(
-                                    f"<span style='background:#e8f5e9;color:#2e7d32;"
-                                    f"padding:2px 8px;border-radius:8px;font-size:12px;"
-                                    f"margin:2px;display:inline-block'>✓ {s}</span>",
-                                    unsafe_allow_html=True
-                                )
-                        else:
-                            st.caption("None matched")
+            s_col1, s_col2 = st.columns(2)
+            with s_col1:
+                st.markdown("**Matches**")
+                if matched:
+                    for s in matched[:6]:
+                        st.markdown(f"<p style='font-size:16px; margin:0; color:#2e7d32;'>✓ {s}</p>",
+                                    unsafe_allow_html=True)
+                else:
+                    st.caption("No direct matches")
 
-                    with col_x:
-                        st.markdown("**Job also wants:**")
-                        if missing:
-                            for s in missing[:0]:  # cap at 8 so it doesn't overflow
-                                st.markdown(
-                                    f"<span style='background:#fdecea;color:#c62828;"
-                                    f"padding:2px 8px;border-radius:8px;font-size:12px;"
-                                    f"margin:2px;display:inline-block'>✗ {s}</span>",
-                                    unsafe_allow_html=True
-                                )
-                        else:
-                            st.caption("You covered all required skills!")
+            with s_col2:
+                st.markdown("**Missing**")
+                if missing:
+                    for s in missing[:6]:
+                        # Increased font size for readability
+                        st.markdown(
+                            f"<span style='background:#fdecea;color:#c62828;padding:2px "
+                            f"8px;border-radius:8px;font-size:12px;margin:2px;display:inline-block'>𝑥 {s}</span>",
+                            unsafe_allow_html=True)
+                else:
+                    st.caption("Perfect coverage!")
 
-    st.markdown("---")
-    st.markdown("### What happens next?")
-    st.markdown(
-        "1. Your resume has been **scored by our ML model**.\n"
-        "2. The employer will review your application and score.\n"
-        "3. You will receive an **email notification** once a decision is made.\n"
-        "4. Track your application status in **My Applications**."
-    )
-    st.markdown("---")
+        st.divider()
 
-    col_a, col_b = st.columns(2)
-    with col_a:
-        if st.button("View My Applications", use_container_width=True, type="primary"):
-            for key in ["selected_job_id", "apply_stage", "last_score", "last_label"]:
-                st.session_state.pop(key, None)
-            st.session_state["current_page"] = "seeker_dashboard"
-            st.rerun()
-    with col_b:
-        if st.button("Browse More Jobs", use_container_width=True):
-            for key in ["selected_job_id", "apply_stage", "last_score", "last_label",
-                        "matched_skills", "missing_skills", "job_skills"]:
-                st.session_state.pop(key, None)
-            st.session_state["current_page"] = "seeker_dashboard"
-            st.rerun()
+        # Bottom Row: Next Steps & Navigation
+        col_text, col_btns = st.columns([1.5, 1], gap="medium")
+
+        with col_text:
+            st.markdown("#### What happens next?")
+            st.write(
+                "1. Your resume has been **scored by our ML model**.\n"
+                "2. The employer will review your application and score.\n"
+                "3. You will receive an **email notification** once a decision is made.\n"
+                "4. Track your application status in **My Applications**."
+            )
+
+        with col_btns:
+            st.write("")  # Alignment spacer
+            if st.button("View My Applications", use_container_width=True, type="primary"):
+                for key in ["selected_job_id", "apply_stage", "last_score", "last_label"]:
+                    st.session_state.pop(key, None)
+                st.session_state["current_page"] = "seeker_dashboard"
+                st.rerun()
+
+            if st.button("Browse More Jobs", use_container_width=True):
+                for key in ["selected_job_id", "apply_stage", "last_score", "last_label", "matched_skills",
+                            "missing_skills", "job_skills"]:
+                    st.session_state.pop(key, None)
+                st.session_state["current_page"] = "seeker_dashboard"
+                st.rerun()
 
 
 # MAIN FUNCTION called from app.py
