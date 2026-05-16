@@ -506,16 +506,30 @@ def show_application_form(job, seeker_id: int):
     }
 
     def _detect_job_category(job) -> str:
-        """Map the job title/description to a question bank key."""
-        title = job["title"].lower()
-        full_text = (job["title"] + " " + job["description"] + " " + job["requirements"]).lower()
+        """
+        Map the job title/description to a question bank key.
 
+        STRATEGY: check the job TITLE first (higher confidence), then fall
+        back to searching the full text.  Non-tech categories (HR, Finance,
+        Marketing …) are checked before broad tech terms like "engineer" so a
+        "HR Business Partner" or "Financial Analyst" is never mis-classified as
+        a software role just because the word "engineer" appears somewhere in
+        the requirements.
+        """
+        title = job["title"].lower()
+        full_text = (
+                job["title"] + " " + job["description"] + " " + job["requirements"]
+        ).lower()
+
+        # ── TITLE-FIRST matching (most reliable signal) ──────────────────────
+        # HR — checked early so "HR Engineer" still gets HR questions
         if any(w in title for w in [
             "hr", "human resource", "human resources", "recruitment",
             "talent acquisition", "talent management", "payroll",
             "people operations", "people ops", "hrbp",
         ]):
             return "hr"
+
         if any(w in title for w in [
             "finance", "financial", "accounting", "accountant",
             "audit", "auditor", "tax", "budget", "treasurer", "cfo",
@@ -563,66 +577,70 @@ def show_application_form(job, seeker_id: int):
         ]):
             return "design"
 
-            # noinspection PyUnreachableCode
-            if any(w in full_text for w in [
-                "human resource", "hr manager", "hr officer", "recruitment",
-                "talent acquisition", "payroll", "people operations",
-            ]):
-                return "hr"
-            if any(w in full_text for w in [
-                "finance", "accounting", "audit", "financial analyst",
-                "tax", "budget", "treasurer",
-            ]):
-                return "finance"
-            if any(w in full_text for w in [
-                "marketing", "brand", "seo", "digital marketing",
-                "content strategy", "campaign", "crm",
-            ]):
-                return "marketing"
-            if any(w in full_text for w in [
-                "security", "cyber", "penetration", "soc ", "siem", "ethical hack",
-            ]):
-                return "cybersecurity"
-            if any(w in full_text for w in [
-                "network admin", "network engineer", "infrastructure",
-                "cisco", "devops", "cloud engineer", "systems admin", "sysadmin",
-            ]):
-                return "networking"
-            if any(w in full_text for w in [
-                "data scientist", "machine learning", "data analyst",
-                "nlp", "deep learning", "data engineer", "bi ", "analytics",
-            ]):
-                return "data"
-            if any(w in full_text for w in [
-                "software engineer", "software developer", "backend developer",
-                "frontend developer", "full stack", "mobile developer",
-            ]):
-                return "software"
-            if any(w in full_text for w in [
-                "operations manager", "project manager", "supply chain",
-                "logistics", "procurement",
-            ]):
-                return "operations"
-            if any(w in full_text for w in [
-                "ux designer", "ui designer", "graphic designer", "figma",
-                "creative director",
-            ]):
-                return "design"
+        # ── FULL-TEXT fallback (lower priority, less specific) ────────────────
+        if any(w in full_text for w in [
+            "human resource", "hr manager", "hr officer", "recruitment",
+            "talent acquisition", "payroll", "people operations",
+        ]):
+            return "hr"
+        if any(w in full_text for w in [
+            "finance", "accounting", "audit", "financial analyst",
+            "tax", "budget", "treasurer",
+        ]):
+            return "finance"
+        if any(w in full_text for w in [
+            "marketing", "brand", "seo", "digital marketing",
+            "content strategy", "campaign", "crm",
+        ]):
+            return "marketing"
+        if any(w in full_text for w in [
+            "security", "cyber", "penetration", "soc ", "siem", "ethical hack",
+        ]):
+            return "cybersecurity"
+        if any(w in full_text for w in [
+            "network admin", "network engineer", "infrastructure",
+            "cisco", "devops", "cloud engineer", "systems admin", "sysadmin",
+        ]):
+            return "networking"
+        if any(w in full_text for w in [
+            "data scientist", "machine learning", "data analyst",
+            "nlp", "deep learning", "data engineer", "bi ", "analytics",
+        ]):
+            return "data"
+        if any(w in full_text for w in [
+            "software engineer", "software developer", "backend developer",
+            "frontend developer", "full stack", "mobile developer",
+        ]):
+            return "software"
+        if any(w in full_text for w in [
+            "operations manager", "project manager", "supply chain",
+            "logistics", "procurement",
+        ]):
+            return "operations"
+        if any(w in full_text for w in [
+            "ux designer", "ui designer", "graphic designer", "figma",
+            "creative director",
+        ]):
+            return "design"
 
-            return "general"
+        return "general"
 
-    # Seed questions from the detected category: pad with general if needed
+    # Pick 5 questions ONLY from the detected job category.
+    # We never mix in general questions — every question the seeker sees
+    # must be directly relevant to the role they are applying for.
     import random
     category_key = _detect_job_category(job)
     category_pool = QUESTION_BANK.get(category_key, [])
-    general_pool = QUESTION_BANK["general"]
 
-    # Combine and deduplicate, then pick 5
-    combined = list(dict.fromkeys(category_pool + general_pool))  # Preserve order, no dups
+    # If for any reason the category pool is empty (shouldn't happen with
+    # the keys above), fall back to general as a last resort only.
+    if not category_pool:
+        category_pool = QUESTION_BANK["general"]
 
-    # Use job_id as seed so the same job always shows the same 5 questions
+    # Use job_id as the random seed so the same job always shows
+    # the same 5 questions across different sessions and users.
     rng = random.Random(job["id"])
-    selected_questions = rng.sample(combined, min(5, len(combined)))
+    selected_questions = rng.sample(category_pool, min(5, len(category_pool)))
 
     # Persist questions in session_state so re-runs don't reshuffle mid-form
     q_key = f"interview_qs_{job['id']}"
@@ -776,10 +794,9 @@ def show_success_screen(job):
                 if missing:
                     for s in missing[:6]:
                         # Increased font size for readability
-                        st.markdown(
-                            f"<span style='background:#fdecea;color:#c62828;padding:2px "
-                            f"8px;border-radius:8px;font-size:12px;margin:2px;display:inline-block'>𝑥 {s}</span>",
-                            unsafe_allow_html=True)
+                        st.markdown(f"<span style='background:#fdecea;color:#c62828;padding:2px "
+                                    f"8px;border-radius:8px;font-size:12px;margin:2px;display:inline-block'>𝑥 {s}</span>",
+                                    unsafe_allow_html=True)
                 else:
                     st.caption("Perfect coverage!")
 
@@ -791,10 +808,9 @@ def show_success_screen(job):
         with col_text:
             st.markdown("#### What happens next?")
             st.write(
-                "1. Your resume has been **scored by our ML model**.\n"
-                "2. The employer will review your application and score.\n"
-                "3. You will receive an **email notification** once a decision is made.\n"
-                "4. Track your application status in **My Applications**."
+                "1. Your application has been logged with Pioneer Insurance Group.\n\n"
+                "2. The hiring team will review your ML match score and resume shortly.\n\n"
+                "3. Keep an eye on your dashboard for status updates.\n"
             )
 
         with col_btns:

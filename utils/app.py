@@ -282,9 +282,17 @@ def show_sidebar():
             st.markdown("**Navigation**")
             if st.button("My Dashboard", use_container_width=True):
                 st.session_state["current_page"] = "seeker_dashboard"
+                st.session_state.pop("show_preferences", None)
                 st.rerun()
             if st.button("Browse Jobs", use_container_width=True):
                 st.session_state["current_page"] = "job_board"
+                st.session_state.pop("show_preferences", None)
+                st.rerun()
+            if st.button("Job Preferences", use_container_width=True):
+                # Always accessible — goes straight to the preference screen
+                # regardless of what page the user is currently on
+                st.session_state["show_preferences"] = True
+                st.session_state["current_page"] = "home"
                 st.rerun()
 
         else:  # employer
@@ -402,9 +410,10 @@ def main():
                 else:
                     st.title(f"Welcome Back, {name}!")
                     st.markdown("Use the **sidebar** to navigate.")
-                    if st.button("Update Job Preferences"):
-                        st.session_state["show_preferences"]=True
-                        st.rerun()
+                    st.markdown(
+                        "You can update your job preferences at any time "
+                        "using the **Job Preferences** button in the sidebar."
+                    )
             elif role == "employer":
                 st.title(f"Welcome Back, {name}!")
                 st.markdown(

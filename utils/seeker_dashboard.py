@@ -25,6 +25,7 @@ from db import (
     get_seeker_stats,
     get_applications_by_seeker,
     get_seeker_preferences,
+    save_seeker_preferences,
     get_all_active_jobs,
     has_applied
 )
@@ -117,7 +118,7 @@ def show_overview_tab(seeker_id: int):
     c4.metric(
         label="Rejected",
         value=stats["rejected"],
-        delta=f"-{stats['rejected']}" if stats["rejected"] > 0 else "0",
+        delta=stats["rejected"] if stats["rejected"] > 0 else None,
         delta_color="inverse",  # Inverse make the delta red when negative
         help="Applications that were not successful"
     )
@@ -291,54 +292,105 @@ def show_browse_jobs_tab(seeker_id: int):
     # matches jobs with "software", "developer", "engineer" in the title
 
     CATEGORY_KEYWORDS = {
-        "technology & software": ["software", "developer", "engineer",
-                                  "programming", "web", "mobile", "app"],
-        "data science & ai": ["data", "scientist", "machine learning",
-                              "ai", "analyst", "nlp", "deep learning"],
-        "cybersecurity": ["security", "cyber", "penetration",
-                          "ethical hacking", "soc", "siem"],
-        "networking & infrastructure": ["network", "infrastructure", "cisco",
-                                        "devops", "cloud", "systems admin"],
-        "human resources": ["hr", "human resource", "recruitment",
-                            "talent", "payroll", "people"],
-        "finance & accounting": ["finance", "accounting", "audit",
-                                 "financial", "tax", "budget"],
-        "marketing & sales": ["marketing", "sales", "brand",
-                              "digital marketing", "seo", "crm"],
-        "operations & management": ["operations", "manager", "management",
-                                    "logistics", "supply chain", "project"],
-        "design & creative": ["design", "creative", "ui", "ux",
-                              "graphic", "figma", "illustrator"],
-        "healthcare": ["health", "medical", "nurse", "doctor",
-                       "clinical", "pharmacy"],
-        "legal": ["legal", "lawyer", "attorney",
-                  "compliance", "paralegal"],
+        "technology & software": [
+            "software engineer", "software developer", "web developer",
+            "mobile developer", "backend developer", "frontend developer",
+            "full stack", "fullstack", "programmer", "application developer",
+        ],
+        "data science & ai": [
+            "data scientist", "machine learning engineer", "ml engineer",
+            "data analyst", "data engineer", "nlp engineer", "deep learning",
+            "ai engineer", "business intelligence", "bi analyst",
+            "analytics engineer", "data science",
+        ],
+        "cybersecurity": [
+            "cybersecurity", "cyber security", "penetration tester",
+            "ethical hacker", "security analyst", "soc analyst",
+            "information security", "siem", "vulnerability",
+        ],
+        "networking & infrastructure": [
+            "network engineer", "network administrator", "network admin",
+            "infrastructure engineer", "devops engineer", "cloud engineer",
+            "systems administrator", "sysadmin", "cisco", "network architect",
+        ],
+        "human resources": [
+            "human resource", "hr manager", "hr officer", "hr business partner",
+            "hrbp", "recruitment", "talent acquisition", "talent manager",
+            "payroll", "people operations", "people ops",
+        ],
+        "finance & accounting": [
+            "financial analyst", "finance manager", "accountant", "accounting",
+            "auditor", "audit manager", "tax consultant", "budget analyst",
+            "treasurer", "cfo", "financial controller", "accounts payable",
+            "accounts receivable",
+        ],
+        "marketing & sales": [
+            "marketing manager", "digital marketing", "brand manager",
+            "seo specialist", "content marketer", "sales manager",
+            "crm manager", "growth marketer", "social media manager",
+        ],
+        "operations & management": [
+            "operations manager", "project manager", "supply chain manager",
+            "logistics manager", "procurement manager", "operations analyst",
+            "business analyst", "program manager",
+        ],
+        "design & creative": [
+            "ui designer", "ux designer", "graphic designer", "creative director",
+            "visual designer", "product designer", "motion designer",
+            "figma", "illustrator", "web designer",
+        ],
+        "healthcare": [
+            "nurse", "doctor", "physician", "clinical officer", "pharmacist",
+            "medical officer", "health officer", "radiologist", "dentist",
+        ],
+        "legal": [
+            "lawyer", "attorney", "legal counsel", "legal officer",
+            "compliance officer", "paralegal", "advocate",
+        ],
         "other": [],
     }
 
     def job_matches_preferences(job) -> bool:
-        """Returns True if the job matches any of the seeker's preferences"""
-        if not categories:
-            return True  # no preferences set - show all jobs
+        """
+        Returns True if the job matches any of the seeker's saved preferences.
 
-        job_text = (
-            f"{job['title']} {job['description']} {job['requirements']}"
+        Matching strategy (ordered by precision):
+          1. Check job TITLE against the category keyword list — most reliable.
+          2. Check the seeker's custom keywords against the full job text.
+          3. If the seeker selected 'Other', show all jobs that didn't match
+             any specific category.
+        """
+        if not categories:
+            return True   # no preferences saved — show every job
+
+        job_title = job["title"].lower()
+        job_full  = (
+            job["title"] + " " + job["description"] + " " + job["requirements"]
         ).lower()
 
-        # Check category match
         for cat in categories:
             if cat == "other":
-                return True
+                return True   # 'Other' always shows all jobs
+
             cat_words = CATEGORY_KEYWORDS.get(cat, [])
-            if any(word in job_text for word in cat_words):
-                return True
-            # Direct category name match
-            if cat.replace(" & ", " ").replace("&", "") in job_text:
+
+            # ── Title-first check (exact phrase) ──────────────────────────────
+            # Match on the title only first — this avoids Finance jobs appearing
+            # for Data Science seekers just because "data" appears in the
+            # job description somewhere.
+            if any(phrase in job_title for phrase in cat_words):
                 return True
 
-        # Check keyword match
+            # ── Full-text fallback (multi-word phrases only) ──────────────────
+            # Only use multi-word phrases (2+ words) for full-text search so we
+            # don't get false positives from single common words.
+            multi_word = [p for p in cat_words if " " in p]
+            if any(phrase in job_full for phrase in multi_word):
+                return True
+
+        # ── Custom keyword check ──────────────────────────────────────────────
         for kw in keywords:
-            if kw in job_text:
+            if len(kw) > 3 and kw in job_full:   # skip very short keywords
                 return True
 
         return False
@@ -381,18 +433,14 @@ def show_browse_jobs_tab(seeker_id: int):
         ]
 
     if not display_jobs:
-        st.info("No Jobs Match your Search. Try different keywords."
-                "Toggle 'Show all jobs' above or update your preferences from the home page.")
+        st.info("No Jobs Match your Search. Try different keywords. "
+                "Toggle 'Show all jobs' above or update your preferences from the sidebar.")
         return
 
-    st.markdown(f"**{len(jobs)}** job(s) found")
+    st.markdown(f"**{len(display_jobs)}** job(s) found")
     st.divider()
 
-    # 2-column card grid
-    # Zip(jobs[0::2], jobs[1::2]) pairs up jobs into two columns:
-    # jobs[0::2] -> every even-indexed job (0, 2, 4 ...)
-    # jobs[1::2] -> every odd-indexed job (1, 3, 5 ...)
-    # We use zip_longest from itertools to handle an odd number of jobs
+    # 2-column card grid — uses display_jobs (already filtered + searched)
     from itertools import zip_longest
     pairs = list(zip_longest(display_jobs[0::2], display_jobs[1::2]))
 
@@ -453,13 +501,104 @@ def show_browse_jobs_tab(seeker_id: int):
                             st.rerun()
 
 
+# Tab 4 — Job Preferences
+def show_preferences_tab(seeker_id: int):
+    """
+    Lets the seeker update their job category preferences at any time
+    from inside the dashboard — no need to log out and log back in.
+    """
+    ALL_CATEGORIES = [
+        "Technology & Software",
+        "Data Science & AI",
+        "Cybersecurity",
+        "Networking & Infrastructure",
+        "Human Resources",
+        "Finance & Accounting",
+        "Marketing & Sales",
+        "Operations & Management",
+        "Design & Creative",
+        "Healthcare",
+        "Legal",
+        "Other",
+    ]
+
+    st.markdown("### My Job Preferences")
+    st.markdown(
+        "Update the job categories you are interested in. "
+        "Your job board will immediately reflect these changes."
+    )
+    st.divider()
+
+    # Load existing preferences so the selectors are pre-filled
+    prefs = get_seeker_preferences(seeker_id)
+    current_cats = prefs["categories"]
+    current_kws  = prefs["keywords"]
+
+    selected_cats = st.multiselect(
+        "Job Categories (select all that apply)",
+        options=ALL_CATEGORIES,
+        default=current_cats if current_cats else [],
+        key="dash_pref_categories",
+    )
+
+    keywords_str = st.text_input(
+        "Specific skills or keywords (optional)",
+        value=", ".join(current_kws) if current_kws else "",
+        placeholder="e.g. python, machine learning, remote",
+        key="dash_pref_keywords",
+        help="Comma-separated. Jobs containing these words will be prioritised.",
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Save Preferences", type="primary",
+                     use_container_width=True, key="save_prefs_dash"):
+            if not selected_cats:
+                st.warning("Please select at least one category.")
+            else:
+                kw_list = [k.strip() for k in keywords_str.split(",") if k.strip()]
+                save_seeker_preferences(
+                    seeker_id=seeker_id,
+                    categories=", ".join(selected_cats),
+                    keywords=", ".join(kw_list),
+                )
+                st.success(
+                    "Preferences saved! Head to **Browse Jobs** to see your updated listings."
+                )
+                # Clear any cached state so the job board re-filters immediately
+                st.session_state.pop("show_preferences", None)
+
+    with col2:
+        if st.button("Reset to All Jobs", use_container_width=True,
+                     key="reset_prefs_dash"):
+            save_seeker_preferences(
+                seeker_id=seeker_id,
+                categories="",
+                keywords="",
+            )
+            st.info("Preferences cleared — you will now see all available jobs.")
+
+    # Show a live preview of current saved preferences
+    if current_cats:
+        st.divider()
+        st.markdown("**Currently saved preferences:**")
+        pills = " &nbsp; ".join([
+            f"<span style='background:#e8f4fd;color:#1565c0;padding:3px 10px;"
+            f"border-radius:12px;font-size:13px;font-weight:500'>{c}</span>"
+            for c in current_cats
+        ])
+        st.markdown(pills, unsafe_allow_html=True)
+        if current_kws:
+            st.caption(f"Keywords: {', '.join(current_kws)}")
+
+
 # Main Function
 def show_seeker_dashboard():
     """
     Entry point for this page.
     app.py calls this when current_page == "seeker_dashboard".
 
-    Read seeker ID from session_state and render three tabs.
+    Read seeker ID from session_state and render four tabs.
     """
     seeker_id = st.session_state["user_id"]
 
@@ -467,7 +606,9 @@ def show_seeker_dashboard():
     st.markdown(f"Welcome, **{st.session_state['user_name']}**")
     st.divider()
 
-    tabs1, tabs2, tabs3 = st.tabs(["Overview", "My Applications", "Browse Jobs"])
+    tabs1, tabs2, tabs3, tabs4 = st.tabs([
+        "Overview", "My Applications", "Browse Jobs", "Job Preferences"
+    ])
 
     with tabs1:
         show_overview_tab(seeker_id)
@@ -477,3 +618,6 @@ def show_seeker_dashboard():
 
     with tabs3:
         show_browse_jobs_tab(seeker_id)
+
+    with tabs4:
+        show_preferences_tab(seeker_id)
