@@ -97,4 +97,25 @@ class JobCreated(BaseModel):
     """"Sent by an employer when posting a new job
     Mirrors created_job() in db.py
     """
+
+    title: str
+    company: str
+    location: str
+    description: str
+    requirements: str
+    salary: Optional[str] = ""
+
+    @field_validator("title", "company", "location", "description", "requirements")
+    @classmethod
+    def not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("This field cannot be empty")
+        return v.strip()
     
+class JobUpdate(BaseModel):
+    """Sent by an employer when editing an existing job.
+    All fields optional - only provided fields will be updated
+    """
+    title: Optional[str] = None
+    
+
