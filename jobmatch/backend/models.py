@@ -17,3 +17,43 @@ Roles (mirrors Your SQLite app):
     -"Seeker" -> Job Seekers who browse and apply
     -"employer"-> Companies that post jobs and review applicants 
 """
+
+from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional, List
+from datetime import datetime
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    seeker = "seeker"
+    employer = "employer"
+
+class ApplicationStatus(str, Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+
+
+class UserCreate(BaseModel):
+    """
+    Sent by client when registering a new account.
+    Mirrors do_signup() in app.py
+    """
+    full_name:str
+    email: EmailStr
+    password: str
+    role: UserRole
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters.")
+        return v
+    
+    @field_validator("full_name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Full name cannot be empty")
+        return v.strip()
