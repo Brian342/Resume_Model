@@ -57,3 +57,44 @@ class UserCreate(BaseModel):
         if not v.strip():
             raise ValueError("Full name cannot be empty")
         return v.strip()
+    
+class UserLogin(BaseModel):
+    """Sent by client on the login form"""
+    email: EmailStr
+    password: str
+
+
+class UserOut(BaseModel):
+    """
+    Returned after Login / register and in profile endpoints.
+    Never includes the password hash
+    """
+    id: int
+    full_name: str
+    email: str
+    role: UserRole
+    job_categories: Optional[str] = None 
+    job_keywords: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+class Token(BaseModel):
+    """Returned after a successful login"""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+class TokenDate(BaseModel):
+    """Decoded payload stored inside the JWT."""
+    user_id: int
+    role: UserRole
+
+
+# JOB SCHEMAS
+class JobCreated(BaseModel):
+    """"Sent by an employer when posting a new job
+    Mirrors created_job() in db.py
+    """
+    
