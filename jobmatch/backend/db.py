@@ -200,6 +200,7 @@ async def create_job(
     job_id = await database.execute(query)
     return job_id
 
+
 async def get_all_active_jobs(
         categories: Optional[str] = None,
         keywords: Optional[str] = None
@@ -258,3 +259,68 @@ async def get_all_active_jobs(
     return result
 
 
+async def get_jobs_by_employer(employer_id: int) -> list:
+    """
+    Fetches all jobs posted by a specific employer.
+    Used on the employer dashboard
+    """
+    query = (
+        jobs.select()
+        .where(jobs.c.employer_id == employer_id)
+        .order_by(jobs.c.created_at.desc())
+    )
+    rows = await database.fetch_all(query)
+    return [dict(r) for r in rows]
+
+
+async def get_job_by_id(job_id: int) -> Optional[dict]:
+    """Fetches a single job by ID. Used on the job detail page."""
+    query = jobs.select().where(jobs.c.id == job_id)
+    row = await database.fetch_one(query)
+    return dict(row) if row else None
+
+
+async def toggle_job_active(job_id: int, is_active: bool) -> None:
+    """
+    Activates or deactivates a job listing.
+    Employers can pause a listing withiout deleting it
+    """
+    query = (
+        jobs.update()
+        .where(jobs.c.id == job_id)
+        .values(is_active=is_active)
+    )
+    await database.execute(query)
+
+
+async def update_job(
+        job_id: int,
+        title: str,
+        company: str,
+        location: str,
+        description: str,
+        requirements: str,
+        salary: str
+) -> None:
+    """
+    Updates an existing job posting. called from routers/jobs.py
+    """
+    query = (
+        jobs.update()
+        .where(jobs.c.id == job_id)
+        .values(
+            title=title,
+            company=company,
+            location=location,
+            description=description,
+            requirements=requirements,
+            salary=salary,
+        )
+    )
+    await database.execute(query)
+
+
+async def delete_job(job_id: int) ->None:
+    """
+
+    """
