@@ -75,5 +75,19 @@ jobs = sqlalchemy.Table(
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
     sqlalchemy.Column("employer_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"), nullable=False),
+    sqlalchemy.Column("title", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("company", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("location", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("description", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("requirements", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("salary", sqlalchemy.Text, nullable=True, default=""),
+    sqlalchemy.Column("is_active", sqlalchemy.Boolean, nullable=False),
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=datetime.utcnow),
+)
+
+applications = sqlalchemy.Table(
+    "applications",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
 
 )
