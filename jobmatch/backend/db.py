@@ -96,5 +96,6 @@ applications = sqlalchemy.Table(
     sqlalchemy.Column("ai_score", sqlalchemy.Float, nullable=True),
     sqlalchemy.Column("ml_label", sqlalchemy.Text, nullable=True),
     sqlalchemy.Column("status", sqlalchemy.Text, nullable=False, default="pending"),  # pending|approved|rejected
-
+    sqlalchemy.Column("applied_at", sqlalchemy.DateTime, default=datetime.utcnow),
+    sqlalchemy.UniqueConstraint("job_id", "seeker_id", name="uq_job_seeker"),
 )
