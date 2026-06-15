@@ -169,7 +169,92 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
     row = await database.fetch_one(query)
     return dict(row) if row else None
 
+
 # JOB FUNCTIONS
 # Mirrors: create_job, get_all_active_jobs, get_jobs_by_employer,
 #          get_job_by_id, toggle_job_active, update_job, delete_job
+
+async def create_job(
+        employer_id: int,
+        title: str,
+        company: str,
+        location: str,
+        description: str,
+        requirements: str,
+        salary: str = ""
+) -> int:
+    """Inserts a new Job Posting. Returns the new job's ID.
+    Called from routers/jobs.py when an employer posts a job
+    """
+    query = jobs.insert().values(
+        employer_id=employer_id,
+        title=title,
+        company=company,
+        location=location,
+        description=description,
+        requirements=requirements,
+        salary=salary,
+        is_active=True,
+        created_at=datetime.utcnow(),
+    )
+    job_id = await database.execute(query)
+    return job_id
+
+async def get_all_active_jobs(
+        categories: Optional[str] = None,
+        keywords: Optional[str] = None
+) -> list:
+    """
+    Fetches all active jobs, joined with the employer's name.
+    Optionally filters by the seeker's saved category/keyword preferences.
+
+    categories: comma-separated string e.g "Technology & Software, Data Science & AI"
+    keywords: comma-separated string e.g "python, machine learning"
+
+    Mirrors the JOIN query in the original get_all_active_jobs().
+    """
+    # Base JOIN - jobs + employer name (same as original SQLite Query)
+    j = jobs.alias("j")
+    u = users.alias("u")
+    query = (
+        sqlalchemy.select(
+            j,
+            u.c.full_name.label("employer_name"),
+        )
+        .select_from(j.join(u, j.c.employer_id == u.c.id))
+        .where(j.c.is_active == True)
+        .order_by(j.c.created_at.desc())
+    )
+
+    rows = await database.fetch_all(query)
+    result = [dict(r) for r in rows]
+
+    # Apply preference filters in Python (simple + portable)
+    if categories:
+        cat_list = [c.strip().lower() for c in categories.split(",") if c.strip()]
+        if cat_list:
+            result = [
+                r for r in result
+                if any(
+                    cat in (r["title"] + " " + r["description"] + " " + r["requirements"]).lower()
+
+                    for cat in cat_list
+                )
+            ]
+
+    if keywords:
+        kw_list = [k.strip().lower() for k in keywords.split(",") if k.strip()]
+        if kw_list:
+            result = [
+                r for r in result
+                if any(
+                    kw in (r["title"] + " " + r["description"] + " " + r["requirements"]).lower()
+
+                    for kw in kw_list
+
+                )
+            ]
+
+    return result
+
 
