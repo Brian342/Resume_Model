@@ -99,3 +99,77 @@ applications = sqlalchemy.Table(
     sqlalchemy.Column("applied_at", sqlalchemy.DateTime, default=datetime.utcnow),
     sqlalchemy.UniqueConstraint("job_id", "seeker_id", name="uq_job_seeker"),
 )
+
+
+# StartUp / Shutdown (Called from main.py lifespan)
+async def connect():
+    """Opens the async database connection pool."""
+    await database.connect()
+    print("Database connected.")
+
+
+async def disconnect():
+    """Closes the async database connection pool."""
+    await database.disconnect()
+    print("Database disconnected")
+
+
+def create_tables():
+    """
+    Runs CREATE TABLE IF NOT EXISTS for all tables.
+    Uses a synchronous SQLAlchemy engine - only called once at startup
+    """
+    sync_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
+    engine = sqlalchemy.create_engine(sync_url)
+    metadata.create_all(engine)
+    engine.dispose()
+    print("Tables created (or already exist).")
+
+
+# USER FUNCTIONS
+# Mirrors: create_user, get_user_by_email, get_user_by_id
+
+async def create_user(full_name: str, email: str, password_hash: str, role: str) -> bool:
+    """
+    Inserts a new user. Returns True on success, False if email already exists.
+    password_hash must already be hashed before calling this (done in auth_utils.py)
+    """
+    query = users.insert().values(
+        full_name=full_name.strip(),
+        email=email.strip().lower(),
+        password=password_hash,
+        role=role,
+        job_categories="",
+        job_keywords="",
+        created_at=datetime.utcnow(),
+    )
+    try:
+        await database.execute(query)
+        return True
+    except Exception:
+        # Unique constraint on emial violated - email already registered
+        return False
+
+
+async def get_user_by_email(email: str) -> Optional[dict]:
+    """
+    Fetches a single user by email. Used during login.
+    Returns a dict or None if not found
+    """
+    query = users.select().where(
+        users.c.email == email.strip().lower()
+    )
+    row = await database.fetch_one(query)
+    return dict(row) if row else None
+
+
+async def get_user_by_id(user_id: int) -> Optional[dict]:
+    """Fetches a user by their ID. Used to display profile info."""
+    query = users.select().where(users.c.id == user_id)
+    row = await database.fetch_one(query)
+    return dict(row) if row else None
+
+# JOB FUNCTIONS
+# Mirrors: create_job, get_all_active_jobs, get_jobs_by_employer,
+#          get_job_by_id, toggle_job_active, update_job, delete_job
+
