@@ -66,5 +66,14 @@ users = sqlalchemy.Table(
     sqlalchemy.Column("password", sqlalchemy.Text, nullable=False),
     sqlalchemy.Column("role", sqlalchemy.Text, nullable=False),  # seeker employer
     sqlalchemy.Column("job_categories", sqlalchemy.Text, nullable=True, default=""),
+    sqlalchemy.Column("job_keywords", sqlalchemy.Text, nullable=True, default=""),
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=datetime.utcnow),
+)
+
+jobs = sqlalchemy.Table(
+    "jobs",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("employer_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"), nullable=False),
 
 )
