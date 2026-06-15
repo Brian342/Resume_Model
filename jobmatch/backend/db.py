@@ -320,7 +320,155 @@ async def update_job(
     await database.execute(query)
 
 
-async def delete_job(job_id: int) ->None:
+async def delete_job(job_id: int) -> None:
+    """
+    Permanently deletes a job and ALL its applications.
+    Applications are deleted first because of the FK constraint —
+    PostgreSQL won't let you delete a job that has applications pointing to it.
+    Mirrors the original delete_job() exactly.
+    """
+    await database.execute(
+        applications.delete().where(applications.c.job_id == job_id)
+    )
+    await database.execute(
+        jobs.delete().where(jobs.c.id == job_id)
+    )
+
+
+# APPLICATION FUNCTIONS
+# Mirrors: create_application, get_applications_by_seeker,
+#          get_applications_by_job, update_application_status,
+#          update_application_score, has_applied, get_seeker_stats
+
+async def create_application(
+        job_id: int,
+        seeker_id: int,
+        resume_path: str,
+        answers_json: str
+) -> bool:
+    """
+    Saves a new application. Returns True on success.
+    False if the seeker already applied to this job (UNIQUE constraint)
+    """
+    query = applications.insert().values(
+        job_id=job_id,
+        seeker_id=seeker_id,
+        resume_path=resume_path,
+        answers=answers_json,
+        status="pending",
+        applied_at=datetime.utcnow(),
+    )
+    try:
+        await database.execute(query)
+        return True
+    except Exception:
+        return False
+
+
+async def get_applications_by_seeker(seeker_id: int) -> list:
+    """
+    Fetches all applications made by a seeker, with job details.
+    Mirrors the JOIN query in the original get_applications_by_seeker().
+    """
+    a = applications.alias("a")
+    j = jobs.alias("j")
+    query = (
+        sqlalchemy.select(
+            a,
+            j.c.title.label("job_title"),
+            j.c.company,
+            j.c.location,
+        )
+        .select_from(a.join(j, a.c.job_id == j.c.id))
+        .where(a.c.seeker_id == seeker_id)
+        .order_by(a.c.applied_at.desc())
+    )
+    rows = await database.fetch_all(query)
+    return [dict(r) for r in rows]
+
+
+async def get_applications_by_job(job_id: int) -> list:
+    """
+    Fetches all applications for a job, with seeker details.
+    Sorted by ai_score DESC (NULLS last) - mirrors original ORDER BY
+    """
+    a = applications.alias("a")
+    u = users.alias("u")
+    query = (
+        sqlalchemy.select(
+            a.cu.c.full_name.label("seeker_name"),
+            u.c.email.label("seeker_email"),
+        )
+        .select_from(a.join(u, a.c.seeker_id == u.c.id))
+        .where(a.c.job_id == job_id)
+        .order_by(
+            sqlalchemy.case(
+                (a.c.ai_score == None, 1), else_=0
+            ),
+            a.c.ai_score.desc(),
+        )
+    )
+    rows = await database.fetch_all(query)
+    return [dict(r) for r in rows]
+
+
+async def get_application_by_id(application_id: int) -> Optional[dict]:
+    """
+    Fetches a single application by ID
+    """
+    query = applications.select().where(applications.c.id == application_id)
+    row = await database.fetch_one(query)
+    return dict(row) if row else None
+
+
+async def update_application_status(application_id: int, status: str) -> None:
+    """
+    Updates the employer's decision on an application.
+    status: 'pending', 'approved', 'rejected'
+    """
+    query = (
+        applications.update()
+        .where(applications.c.id == application_id)
+        .values(status=status)
+    )
+    await database.execute(query)
+
+
+async def update_application_score(
+        application_id: int,
+        ai_score: float,
+        ml_label: str
+) -> None:
+    """
+    Writes the Ml model's score and label back to an application.
+    called from routers/match.py after the model runs.
+    Mirrors update_application_score() in the original db.py
+    """
+    query = (
+        applications.update()
+        .where(applications.c.id == application_id)
+        .values(ai_score=ai_score, ml_label=ml_label)
+    )
+    await database.execute(query)
+
+
+async def has_applied(job_id: int, seeker_id: int) -> bool:
+    """
+    Returns True if the seeker has already applied to this job.
+    Used to show 'Already Applied' instead of the Apply button
+    """
+    query = (
+        sqlalchemy.select(applications.c.id)
+        .where(
+            (applications.c.job_id == job_id) &
+            (applications.c.seeker_id == seeker_id)
+        )
+    )
+    row = await database.fetch_one(query)
+    return row is not None
+
+
+async def get_seeker_stats(seeker_id: int) -> dict:
     """
 
     """
