@@ -38,8 +38,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set. "
-        "Check your jobmatch/backend/.env file."
-        )
+                     "Check your jobmatch/backend/.env file."
+                     )
 
 # 'databases' uses an async connection pool.
 # min_size / max_size control how many PostgreSQL connections stay open.
@@ -53,3 +53,18 @@ database = databases.Database(
 # We call metadata.create_all(engine) once at startup to create missing tables.
 metadata = sqlalchemy.MetaData()
 
+# TABLE DEFINITIONS
+# Mirrors the CREATE TABLE statements in the original db.py exactly.
+# Column names, types, constraints, and defaults are preserved.
+
+users = sqlalchemy.Table(
+    "users",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_keys=True, autoincrement=True),
+    sqlalchemy.Column("full_name", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("email", sqlalchemy.Text, nullable=False, unique=True),
+    sqlalchemy.Column("password", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("role", sqlalchemy.Text, nullable=False),  # seeker employer
+    sqlalchemy.Column("job_categories", sqlalchemy.Text, nullable=True, default=""),
+
+)
