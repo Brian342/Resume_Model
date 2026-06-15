@@ -89,5 +89,12 @@ applications = sqlalchemy.Table(
     "applications",
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("job_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("jobs.id"), nullable=False),
+    sqlalchemy.Column("seeker_id", sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"), nullable=False),
+    sqlalchemy.Column("resume_path", sqlalchemy.Text, nullable=True),
+    sqlalchemy.Column("answers", sqlalchemy.Text, nullable=True, default="{}"),
+    sqlalchemy.Column("ai_score", sqlalchemy.Float, nullable=True),
+    sqlalchemy.Column("ml_label", sqlalchemy.Text, nullable=True),
+    sqlalchemy.Column("status", sqlalchemy.Text, nullable=False, default="pending"),  # pending|approved|rejected
 
 )
