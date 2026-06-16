@@ -470,5 +470,48 @@ async def has_applied(job_id: int, seeker_id: int) -> bool:
 
 async def get_seeker_stats(seeker_id: int) -> dict:
     """
+    Returns dashboard stat counts for a seeker.
+    Mirrors get_seeker_stats() exactly - same keys, same logic.
+    Returns:
+        { "total_applied": 5, "qualified": 2, "pending":2, "rejected":1 }
+    """
+    base = applications.c.seeker_id == seeker_id
 
+    total = await database.fetch_val(
+        sqlalchemy.select(sqlalchemy.func.count()).where(base)
+    )
+    approved = await database.fetch_val(
+        sqlalchemy.select(sqlalchemy.func.count()).where(
+            base & (applications.c.status == "approved")
+        )
+    )
+    pending = await database.fetch_val(
+        sqlalchemy.select(sqlalchemy.func.count()).where(
+            base & (applications.c.status == "pending")
+        )
+    )
+    rejected = await database.fetch_val(
+        sqlalchemy.select(sqlalchemy.func.count()).where(
+            base & (applications.c.status == "rejected")
+        )
+    )
+
+    return {
+        "total_appplied": total or 0,
+        "qualified": approved or 0,
+        "pending": pending or 0,
+        "rejected": rejected or 0
+    }
+
+
+# PREFERENCES FUNCTIONS
+# Mirrors: save_seeker_preferences, get_seeker_preferences
+
+async def save_seeker_preferences(
+        seeker_id: int,
+        categories: str,
+        keywords: str
+) -> None:
+    """
+    
     """
