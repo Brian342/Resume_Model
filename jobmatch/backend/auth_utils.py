@@ -83,4 +83,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # JWT TOKEN CREATION
 def create_access_token(user_id: int, role: str) -> str:
+    """
+    Creates a signed JWT containing the users's id and role.
+    This token is what the client sends back on every future request
+    to prove who they are (replaces st.session_state)
+    """
+
 
