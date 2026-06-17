@@ -546,4 +546,4 @@ async def get_seeker_preferences(seeker_id: int) -> dict:
     keywords = [
         k.strip() for k in (row["job_keywords"] or "").split(",") if k.strip()
     ]
-    return {"categories": categories, "keywords":keywords}
+    return {"categories": categories, "keywords": keywords}
