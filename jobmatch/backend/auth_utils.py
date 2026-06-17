@@ -101,7 +101,51 @@ def create_access_token(user_id: int, role: str) -> str:
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token
 
+
 def decode_access_token(token: str) -> TokenDate:
     """
-
+    Decodes and validates a JWT.
+    Raises HTTPException(401) if the token is invalid, malformed, or expired.
     """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="could not validate credentials. please log in again.",
+        headers={"www-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        role = payload.get("role")
+
+        if user_id is None or role is None:
+            raise credentials_exception
+
+        return TokenDate(user_id=user_id, role=UserRole(role))
+
+    except JWTError:
+        raise credentials_exception
+    except ValueError:
+        raise credentials_exception
+
+# FASTAPI DEPENDENCIES
+# These plug into route functions as: current_user: dict = Depends(get_current_user)
+# FastAPI calls them automatically before your route code runs.
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    """
+    Decodes the JWT from the Authorization header, then fetches the full user record from the database.
+
+    Use this on any route that requires the caller to be logged in,
+    regardless of role:
+        @router.get("/me")
+        async def read_profile(current_user: dict = Depends(get_current_user)):
+            ...
+    """
+    token_data = decode_access_token(token)
+
+    user = await db.get_user_by_id(token_data.user_id)
+    if user is None:
+        raise HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED
+    )
