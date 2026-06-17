@@ -513,5 +513,12 @@ async def save_seeker_preferences(
         keywords: str
 ) -> None:
     """
-    
+    Saves a seeker's job preferences directly on the users row.
+    Categories / Keywords are comma-separated strings.
+    Mirrors save_seeker_preferences() in the original db.py
     """
+    query = (
+        users.update()
+        .where(users.c.id == seeker_id)
+        .values(job_categories=categories, job_keywords=keywords)
+    )
