@@ -53,6 +53,34 @@ if not JWT_SECRET:
 # and how to extract the "Bearer <token>" header on protected routes.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
+
 # PASSWORD HASHING
 # Mirrors hash_password() / verify_password() from the original app.py,
 # using bcrypt directly (same library, same behavior — no passlib).
+
+def hash_password(plain_password: str) -> str:
+    """
+    Hashes a plain-text password using bcrypt.
+    Returns a string safe to store in the database.
+    """
+    hashed = bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt())
+    return hashed.decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Returns True if plain_password matches the stored bcrypt hash.
+    Identical logic to the original app.py verify_password().
+    """
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8")
+        )
+    except (ValueError, TypeError):
+        # Malformed hash in the database - treat as no match rather than crash
+        return False
+
+# JWT TOKEN CREATION
+def create_access_token(user_id: int, role: str) -> str:
+
