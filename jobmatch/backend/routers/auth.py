@@ -62,5 +62,10 @@ async def register(user_in: UserCreate):
     if not success:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with that email already exists."
+            detail="An account with that email already exists.",
         )
+
+    return MessageResponse(message="Account created successfully. please log in.")
+
+# LOGIN
+# Mirrors do_login() in app.py
