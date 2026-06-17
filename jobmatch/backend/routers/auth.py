@@ -17,14 +17,14 @@ FLOW DIFFERENCE FROM STREAMLIT:
 
 from fastapi import APIRouter, HTTPException, Depends, status
 
-import db
-from auth_utils import (
+from .. import db
+from ..auth_utils import (
     hash_password,
     verify_password,
     create_access_token,
     get_current_user,
 )
-from models import UserCreate, UserLogin, UserOut, Token, MessageResponse
+from ..models import UserCreate, UserLogin, UserOut, Token, MessageResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
