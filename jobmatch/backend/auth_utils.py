@@ -128,6 +128,7 @@ def decode_access_token(token: str) -> TokenDate:
     except ValueError:
         raise credentials_exception
 
+
 # FASTAPI DEPENDENCIES
 # These plug into route functions as: current_user: dict = Depends(get_current_user)
 # FastAPI calls them automatically before your route code runs.
@@ -147,5 +148,38 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     user = await db.get_user_by_id(token_data.user_id)
     if user is None:
         raise HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED
-    )
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account no longer exists.",
+            headers={"www-Authenticate": "Bearer"},
+        )
+    return user
+
+
+async def require_seeker(current_user: dict = Depends(get_current_user)) -> dict:
+    """
+    Use this on routes only job seekers can access, e.g. applying to jobs:
+        @router.post("/applications")
+        async def apply(current_user: dict = Depends(require_seeker)):
+            ...
+    """
+    if current_user["role"] != "seeker":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action is only available to job seekers."
+        )
+    return current_user
+
+
+async def require_employer(current_user: dict = Depends(get_current_user)) -> dict:
+    """
+    Use this on routes only employers can access, e.g. posting jobs:
+        @router.post("/jobs")
+        async def post_job(current_user: dict = Depends(require_employer)):
+            ...
+    """
+    if current_user["role"] != "employer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action is only available to employers."
+        )
+    return current_user
