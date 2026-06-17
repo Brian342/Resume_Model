@@ -81,6 +81,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         # Malformed hash in the database - treat as no match rather than crash
         return False
 
+
 # JWT TOKEN CREATION
 def create_access_token(user_id: int, role: str) -> str:
     """
@@ -88,5 +89,19 @@ def create_access_token(user_id: int, role: str) -> str:
     This token is what the client sends back on every future request
     to prove who they are (replaces st.session_state)
     """
+    expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRE_MINUTES)
 
+    payload = {
+        "user_id": user_id,
+        "role": role,
+        "exp": expire,  # standard JWT expiry claim
+        "iat": datetime.utcnow(),  # issued-at claim
+    }
 
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return token
+
+def decode_access_token(token: str) -> TokenDate:
+    """
+
+    """
