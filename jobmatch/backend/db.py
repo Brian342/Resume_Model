@@ -522,3 +522,28 @@ async def save_seeker_preferences(
         .where(users.c.id == seeker_id)
         .values(job_categories=categories, job_keywords=keywords)
     )
+    await database.execute(query)
+
+
+async def get_seeker_preferences(seeker_id: int) -> dict:
+    """
+    Returns the seeker's saved preferences as lists.
+    Mirrors get_seeker_preferences() - same return shape:
+    {"categories": [...], "keywords":[...]}
+    """
+    query = (
+        sqlalchemy.select(users.c.job_categories, users.c.job_keywords)
+        .where(users.c.id == seeker_id)
+    )
+    row = await database.fetch_one(query)
+
+    if not row:
+        return {"categories": [], "keywords": []}
+
+    categories = [
+        c.strip() for c in (row["job_categories"] or "").split(",") if c.strip()
+    ]
+    keywords = [
+        k.strip() for k in (row["job_keywords"] or "").split(",") if k.strip()
+    ]
+    return {"categories": categories, "keywords":keywords}
