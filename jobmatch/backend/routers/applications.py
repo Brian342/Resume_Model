@@ -26,3 +26,17 @@ WHY SCORING HAPPENS INLINE (not a separate endpoint):
   write score back, all within the single POST /applications call.
 """
 
+import json
+import random
+from pathlib import Path
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Form
+from ..import db
+from ..auth_utils import get_current_user, require_employer, require_seeker
+from ..models import ApplicationOut, ApplicationStatusUpdate, MessageResponse
+
+router = APIRouter(prefix="/applications", tags=["Applications"])
+
+# ML MODEL LOADING  (mirrors the top of apply.py)
+
