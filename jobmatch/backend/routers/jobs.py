@@ -186,3 +186,56 @@ async def edit_job(
         salary=job_in.salary if job_in.salary is not None else existing["salary"],
     )
 
+    # is_active is handled separately since update_job() doesn't touch it
+    if job_in.is_active is not None:
+        await db.toggle_job_active(job_id, job_in.is_active)
+
+    return MessageResponse(message="Job updated successfully")
+
+# TOGGLE ACTIVE  — mirrors toggle_job_active() called from employer_dashboard.py
+@router.patch(
+    "/{job_id}/toggle",
+    response_model=MessageResponse,
+    summary="Activate or deactivate a job listing (owner only)",
+)
+async def toggle_job(
+        job_id: int,
+        is_active: bool,
+        current_user: dict = Depends(require_employer),
+):
+    """
+        Pauses or re-activates a listing without deleting it.
+        Mirrors the "Pause" / "Activate" buttons on the employer dashboard.
+        """
+    await _get_owned_job_or_404(job_id, current_user["id"])
+
+    await db.toggle_job_active(job_id, is_active)
+
+    state = "activated" if is_active else "paused"
+    return MessageResponse(message=f"Job {state} successfully")
+
+# DELETE  — mirrors delete_job() called from employer_dashboard.py
+@router.delete(
+    "/{job_id}",
+    response_model=MessageResponse,
+    summary="Permanently delete a job and its applications (owner only)",
+)
+async def remove_job(
+        job_id: int,
+        current_user: dict = Depends(require_employer),
+):
+    """
+        Permanently deletes a job and all applications tied to it.
+        This is destructive and irreversible — the frontend should
+        confirm with the employer before calling this, exactly like
+        the confirmation step in employer_dashboard.py.
+        """
+    await _get_owned_job_or_404(job_id, current_user["id"])
+
+    await db.delete_job(job_id)
+
+    return MessageResponse(message="Job and its applications were deleted")
+
+
+
+
