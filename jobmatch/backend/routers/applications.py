@@ -426,20 +426,61 @@ async def get_interview_questions(
         "category": category_key,
         "questions": selected_questions,
     }
+
+
 # MY APPLICATIONS  — mirrors show_my_applications_tab()
 @router.get(
     "/mine",
     response_model=list[ApplicationOut],
     summary="List all applications submitted by the logged-in seeker",
 )
-
 async def list_my_applications(
-    status_filter: Optional[str] = None,
-    current_user: dict = Depends(require_seeker),
+        status_filter: Optional[str] = None,
+        current_user: dict = Depends(require_seeker),
 ):
     """
         Returns the seeker's applications, joined with job title/company/location.
         status_filter: 'pending' | 'approved' | 'rejected' (omit for all) —
         mirrors the filter_status selectbox in show_my_applications_tab().
         """
+    apps = await db.get_applications_by_seeker(current_user["id"])
+
+    if status_filter:
+        apps = [a for a in apps if a["status"] == status_filter.lower()]
+
+    return apps
+
+
+# MY STATS  — mirrors show_overview_tab()'s metric cards
+@router.get(
+    "/mine/stats",
+    summary="Get application stat counts for the Overview tab",
+)
+async def my_application_stats(current_user: dict = Depends(require_seeker)):
+    """
+    Returns { total_applied, qualified, pending, rejected } —
+    powers the four metric cards on the seeker's Overview tab.
+    """
+    return await db.get_seeker_stats(current_user["id"])
+
+@router.get(
+    "/job/{job_id}",
+    response_model=list[ApplicationOut],
+    summary="View all applicants for a job (owner only)",
+)
+async def list_applicants_for_job(
+        job_id: int,
+        current_user: dict = Depends(require_employer),
+):
+    """
+        Returns applicants for a job, sorted by ai_score DESC (unscored last),
+        joined with seeker name + email. Only the employer who owns the job
+        can view its applicants.
+        """
+    job = await db.get_job_by_id(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Job not found.")
+
+    if job["employer_id"] != current_user["id"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN)
 
