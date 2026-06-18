@@ -434,5 +434,12 @@ async def get_interview_questions(
 )
 
 async def list_my_applications(
+    status_filter: Optional[str] = None,
+    current_user: dict = Depends(require_seeker),
+):
+    """
+        Returns the seeker's applications, joined with job title/company/location.
+        status_filter: 'pending' | 'approved' | 'rejected' (omit for all) —
+        mirrors the filter_status selectbox in show_my_applications_tab().
+        """
 
-)
