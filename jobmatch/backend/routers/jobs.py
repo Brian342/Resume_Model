@@ -234,7 +234,7 @@ async def remove_job(
 
     await db.delete_job(job_id)
 
-    return MessageResponse(message="Job and its applications were deleted")
+    return MessageResponse(message="Job and its applications were deleted.")
 
 
 
