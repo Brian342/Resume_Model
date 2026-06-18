@@ -254,4 +254,120 @@ def score_resume(parsed_resume: dict, job: Optional[dict] = None) -> tuple:
         exp_years = parsed_resume.get("experience_years", 0)
         ml_score = min(100, skills_count * 8 + exp_years * 5)
     else:
+        resume_data = {
+            "skills": parsed_resume["skills"],
+            "experience_years": parsed_resume["experience_years"],
+            "education": parsed_resume["education"],
+            "certifications": parsed_resume["certifications"],
+            "job_role": parsed_resume["job_role"],
+            "projects_count": parsed_resume["projects_count"],
+            "Education": parsed_resume["education"],
+            "Certifications": parsed_resume["certifications"],
+            "Job Role": parsed_resume["job_role"],
+        }
+        try:
+            from ..train_model import predict_single
+            ml_score, _ =predict_single(_model_bundle, resume_data)
+        except Exception:
+            ml_score =.0
+
+    matched_skills, missing_skills = [], []
+    if job is not None:
+        job_skills = extract_job_skills(job["description"], job["requirements"])
+        resume_skills = parsed_resume.get("skills_list", [])
+        overlap = compute_skill_overlap(resume_skills, job_skills)
+
+        matched_skills = list(
+            set(s.lower() for s in resume_skills) & set(s.lower() for s in job_skills)
+        )
+        missing_skills = list(
+            set(s.lower() for s in job_skills) - set(s.lower() for s in resume_skills)
+        )
+
+        final_score = round((ml_score * .4) + (overlap * 100 * .6), 1)
+    else:
+        final_score = round(ml_score, 1)
+
+    if final_score >= 65:
+        label = "Qualified"
+    elif final_score >= 40:
+        label = "Review Needed"
+    else:
+        label = "Not Qualified"
+
+    return float(final_score), label, matched_skills, missing_skills
+
+# SUBMIT APPLICATION  — mirrors show_application_form()'s submit handler
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit an application: upload resume, answer questions, get scored",
+)
+async def submit_application(
+        job_id: int = Form(...),
+        why_interested: str = Form(...),
+        relevant_experience: str = Form(...),
+        years_experience: str = Form(...),
+        availability: str = Form(...),
+        interview_answers: str = Form("{}"),
+        resume:Optional[UploadFile] = File(None),
+        current_user: dict = Depends(require_seeker),
+):
+    """
+        Full submission flow, mirroring show_application_form()'s submit_clicked block:
+          1. Validate the job exists
+          2. Save the uploaded resume (if provided)
+          3. Parse the resume text
+          4. Save the application + answers as a JSON blob
+          5. Score the resume against the job (40% ML quality + 60% skill overlap)
+          6. Write the score back onto the application
+          7. Return the score + matched/missing skills, just like show_success_screen()
+
+        interview_answers is a JSON string the client builds from the 5 tailored
+        questions returned by GET /applications/{job_id}/questions.
+        """
+    job = await db.get_job_by_id(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Job not Found.")
+
+    if not why_interested.strip():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please answer: Why are you interested in this role?")
+
+    if not relevant_experience.strip():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Please describe your most relevant experience.")
+
+    seeker_id = current_user["id"]
+
+    # ── Save + parse resume ──
+    # parse_resume() does its own PDF text extraction internally (pdfplumber,
+    # falling back to PyPDF2) — it expects a file-like object, not raw text.
+    parsed_resume = None
+    resume_path = ""
+    if resume is not None:
+        file_bytes = await resume.read()
+        resume_path = _save_resume_bytes(file_bytes, resume.filename, seeker_id, job_id)
+
+        from ..resume_parser import parse_resume
+        from io import BytesIO
+        parsed_resume = parsed_resume(BytesIO(file_bytes))
+        if not parsed_resume.get("raw_text"):
+            parsed_resume = None
+
+    try:
+        ai_answer = json.loads(interview_answers)
+    except json.JSONDecodeError:
+        ai_answer = {}
+
+    answers = {
+        "Why interested in this role?": why_interested.strip(),
+        "Most relevant experience": relevant_experience.strip(),
+        "Years of experience": years_experience,
+        "Availability to start": availability,
+        **ai_answer
+    }
+    answers_json = json.dumps(answers)
+
+
+
+
 
