@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Form
-from ..import db
+from .. import db
 from ..auth_utils import get_current_user, require_employer, require_seeker
 from ..models import ApplicationOut, ApplicationStatusUpdate, MessageResponse
 
@@ -167,3 +167,57 @@ QUESTION_BANK = {
     ],
 }
 
+
+def _detect_job_category(job: dict) -> str:
+    """
+    Maps a job's title/description to a question-bank key.
+    Title is checked first (higher confidence), then full text as fallback.
+    Mirrors _detect_job_category() in apply.py exactly — same keyword
+    lists, same ordering (HR and Finance checked before generic "engineer"
+    terms so they're never mis-classified as software roles).
+    """
+    title = job["title"].lower()
+    full_text = (job["title"] + " " + job["description"] + " " + job["requirements"]).lower()
+
+    title_rules = [
+        ("hr", ["hr", "human resource", "human resources", "recruitment",
+                "talent acquisition", "talent management", "payroll",
+                "people operations", "people ops", "hrbp"]),
+        ("finance", ["finance", "financial", "accounting", "accountant",
+                     "audit", "auditor", "tax", "budget", "treasurer", "cfo"]),
+        ("marketing", ["marketing", "brand", "seo", "digital marketing",
+                       "content", "campaign", "crm", "growth"]),
+        ("cybersecurity", ["security", "cyber", "penetration", "soc", "siem", "ethical hack"]),
+        ("networking", ["network", "networking", "infrastructure", "cisco",
+                        "devops", "cloud engineer", "systems admin", "sysadmin", "network admin"]),
+        ("data", ["data scientist", "machine learning", "data analyst",
+                  "nlp", "deep learning", "data engineer", "bi analyst", "analytics"]),
+        ("software", ["software", "developer", "programmer", "web developer",
+                      "mobile", "backend", "frontend", "full stack", "fullstack"]),
+        ("operations", ["operations", "project manager", "supply chain",
+                        "logistics", "procurement", "operations manager"]),
+        ("design", ["design", "designer", "ui", "ux", "graphic", "figma",
+                    "creative", "illustrator"]),
+    ]
+    for category, words in title_rules:
+        if any(w in title for w in words):
+            return category
+
+    fulltext_rules = [
+        ("hr", ["human resource", "hr manager", "hr officer", "recruitment",
+                "talent acquisition", "payroll", "people operations"]),
+        ("finance", ["finance", "accounting", "audit", "financial analyst",
+                     "tax", "budget", "treasurer"]),
+        ("marketing", ["marketing", "brand", "seo", "digital marketing",
+                       "content strategy", "campaign", "crm"]),
+        ("cybersecurity", ["security", "cyber", "penetration", "soc ", "siem", "ethical hack"]),
+        ("networking", ["network admin", "network engineer", "infrastructure",
+                        "cisco", "devops", "cloud engineer", "systems admin", "sysadmin"]),
+        ("data", ["data scientist", "machine learning", "data analyst",
+                  "nlp", "deep learning", "data engineer", "bi ", "analytics"]),
+        ("software", ["software engineer", "software developer", "backend developer",
+                      "frontend developer", "full stack", "mobile developer"]),
+        ("operations", ["operations manager", "project manager", "supply chain",
+                        "logistics", "procurement"]),
+        ("design", ["ux designer", "ui designer", "graphic designer", "figma", "creative director"]),
+    ]
