@@ -239,6 +239,7 @@ def _save_resume_bytes(file_bytes: bytes, filename: str, seeker_id: int, job_id:
         f.write(file_bytes)
     return str(file_path)
 
+
 def score_resume(parsed_resume: dict, job: Optional[dict] = None) -> tuple:
     """
     Scores a resume against a specific job.
@@ -267,9 +268,9 @@ def score_resume(parsed_resume: dict, job: Optional[dict] = None) -> tuple:
         }
         try:
             from ..train_model import predict_single
-            ml_score, _ =predict_single(_model_bundle, resume_data)
+            ml_score, _ = predict_single(_model_bundle, resume_data)
         except Exception:
-            ml_score =.0
+            ml_score = .0
 
     matched_skills, missing_skills = [], []
     if job is not None:
@@ -297,6 +298,7 @@ def score_resume(parsed_resume: dict, job: Optional[dict] = None) -> tuple:
 
     return float(final_score), label, matched_skills, missing_skills
 
+
 # SUBMIT APPLICATION  — mirrors show_application_form()'s submit handler
 @router.post(
     "",
@@ -310,7 +312,7 @@ async def submit_application(
         years_experience: str = Form(...),
         availability: str = Form(...),
         interview_answers: str = Form("{}"),
-        resume:Optional[UploadFile] = File(None),
+        resume: Optional[UploadFile] = File(None),
         current_user: dict = Depends(require_seeker),
 ):
     """
@@ -367,7 +369,70 @@ async def submit_application(
     }
     answers_json = json.dumps(answers)
 
+    saved = await db.create_application(
+        job_id=job_id,
+        seeker_id=seeker_id,
+        resume_path=resume_path,
+        answers_json=answers_json,
+    )
+    if not saved:
+        raise HTTPException(status.HTTP_409_CONFLICT, "you have already applied to this job")
+
+    if parsed_resume:
+        score, label, matched_skills, missing_skills = score_resume(parsed_resume, job=job)
+    else:
+        score, label, matched_skills, missing_skills = .0, "No resume data", [], []
+
+    all_apps = await db.get_applications_by_seeker(seeker_id)
+    latest_app = next((a for a in all_apps if a["job_id"] == job_id), None)
+    if latest_app:
+        await db.update_application_score(latest_app["id"], score, label)
+
+    return {
+        "message": "Application submitted successfully.",
+        "ai_score": score,
+        "ml_label": label,
+        "matched_skills": matched_skills[:6],
+        "missing_skills": missing_skills[:6],
+    }
 
 
+# INTERVIEW QUESTIONS  — mirrors the question-selection block in apply.py
+@router.get(
+    "/questions/{job_id}",
+    summary="Get 5 tailored interview questions for a job",
+)
+async def get_interview_questions(
+        job_id: int,
+        current_user: dict = Depends(require_seeker),
+):
+    """
+    Returns the 5 category-tailored questions for this job.
+    Uses job_id as the random seed so the same job always returns
+    the same 5 questions, exactly like the original (rng = random.Random(job["id"])).
+    """
+    job = await db.get_job_by_id(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Job not found.")
 
+    category_key = _detect_job_category(job)
+    category_pool = QUESTION_BANK.get(category_key, []) or QUESTION_BANK["general"]
 
+    rng = random.Random(job_id)
+    selected_questions = rng.sample(category_pool, min(s, len(category_pool)))
+
+    return {
+        "job_id": job_id,
+        "category": category_key,
+        "questions": selected_questions,
+    }
+# MY APPLICATIONS  — mirrors show_my_applications_tab()
+@router.get(
+    "/mine",
+    response_model=list[ApplicationOut],
+    summary="List all applications submitted by the logged-in seeker",
+)
+
+async def list_my_applications(
+
+)
