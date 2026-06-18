@@ -482,5 +482,8 @@ async def list_applicants_for_job(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Job not found.")
 
     if job["employer_id"] != current_user["id"]:
-        raise HTTPException(status.HTTP_403_FORBIDDEN)
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only view applicants for your own Jobs.")
+
+    return await db.get_applications_by_job(job_id)
+
 
