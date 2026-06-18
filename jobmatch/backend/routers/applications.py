@@ -221,3 +221,37 @@ def _detect_job_category(job: dict) -> str:
                         "logistics", "procurement"]),
         ("design", ["ux designer", "ui designer", "graphic designer", "figma", "creative director"]),
     ]
+    for category, words in fulltext_rules:
+        if any(w in full_text for w in words):
+            return category
+
+    return "general"
+
+
+# RESUME PARSING + SCORING  (mirrors score_resume + extract_text_from_pdf in apply.py)
+
+def _save_resume_bytes(file_bytes: bytes, filename: str, seeker_id: int, job_id: int) -> str:
+    """Saves uploaded resume bytes to disk. Mirrors save_resume() in apply.py.
+    """
+    safe_name = f"seeker{seeker_id}_job{job_id}_{filename}"
+    file_path = UPLOAD_DIR / safe_name
+    with open(file_path, "wb") as f:
+        f.write(file_bytes)
+    return str(file_path)
+
+def score_resume(parsed_resume: dict, job: Optional[dict] = None) -> tuple:
+    """
+    Scores a resume against a specific job.
+    Identical formula to apply.py's score_resume():
+        final_score = (ml_score * 0.4) + (overlap_score * 100 * 0.6)
+    Falls back to ml_score alone if no job context is given.
+    Returns (final_score: float, label: str, matched_skills: list, missing_skills: list).
+    """
+    from ..resume_parser import extract_job_skills, compute_skill_overlap
+
+    if not MODEL_LOADED or _model_bundle is None:
+        skills_count = parsed_resume.get("skill_count", 0)
+        exp_years = parsed_resume.get("experience_years", 0)
+        ml_score = min(100, skills_count * 8 + exp_years * 5)
+    else:
+
