@@ -53,6 +53,7 @@ async def _get_owned_job_or_404(job_id: int, employer_id: int) -> dict:
 
     return job
 
+
 # CREATE  — mirrors create_job() called from employer_dashboard.py
 @router.post(
     "",
@@ -60,9 +61,8 @@ async def _get_owned_job_or_404(job_id: int, employer_id: int) -> dict:
     status_code=status.HTTP_201_CREATED,
     summary="Post a new job listing (employer only)",
 )
-
 async def create_job(
-        job_in:JobCreated,
+        job_in: JobCreated,
         current_user: dict = Depends(require_employer),
 ):
     """
@@ -81,6 +81,7 @@ async def create_job(
     )
 
     return MessageResponse(message=f"Job Posted Successfully (id={job_id}).")
+
 
 # LIST ACTIVE JOBS  — mirrors the job board in seeker_dashboard.py
 
@@ -107,4 +108,81 @@ async def list_active_jobs(
     keywords = None
 
     if use_preferences and current_user["role"] == "seeker":
-        prefs = await db.get
+        prefs = await db.get_seeker_preferences(current_user["id"])
+        if prefs["categories"]:
+            categories = ", ".join(prefs["categories"])
+        if prefs["keywords"]:
+            keywords = ", ".join(prefs["keywords"])
+
+    jobs = await db.get_all_active_jobs(categories=categories, keywords=keywords)
+    return jobs
+
+
+# LIST MY JOBS  — mirrors get_jobs_by_employer() on employer_dashboard.py
+@router.get(
+    "/mine",
+    response_model=list[JobOut],
+    summary="View all jobs posted by the logged-in employer",
+)
+async def list_my_jobs(current_user: dict = Depends(require_employer)):
+    """
+    Returns every job posted by this employer, active or not —
+    this is the employer's own management view, so inactive
+    (paused) listings are included unlike the public job board.
+    """
+    jobs = await db.get_jobs_by_employer(current_user["id"])
+    return jobs
+
+
+# GET ONE JOB  — mirrors the job detail page
+@router.get(
+    "/{job_id}",
+    response_model=JobOut,
+    summary="View a single job's full detail page",
+)
+async def get_job(
+        job_id: int,
+        current_user: dict = Depends(get_current_user),
+):
+    """Returns full details for one job. Open to any logged-in user."""
+    job = await db.get_job_by_id(job_id)
+
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Job not found.",
+        )
+
+    return job
+
+
+# UPDATE  — mirrors update_job() called from employer_dashboard.py
+@router.patch(
+    "/{job_id}",
+    response_model=MessageResponse,
+    summary="Edit an existing job listing (owner only)",
+)
+async def edit_job(
+        job_id: int,
+        job_in: JobUpdate,
+        current_user: dict = Depends(require_employer),
+):
+    """
+        Updates a job's fields. Only fields provided in the request body
+        are changed — anything omitted keeps its current value.
+        Only the employer who posted the job can edit it.
+        """
+    existing = await _get_owned_job_or_404(job_id, current_user["id"])
+    # Merge: use new value if provided, otherwise keep the existing one.
+    # This mirrors how employer_dashboard.py pre-fills the edit form
+    # with current values and only changes what the employer edits.
+    await db.update_job(
+        job_id=job_id,
+        title=job_in.title if job_in.title is not None else existing["title"],
+        company=job_in.company if job_in.company is not None else existing["company"],
+        location=job_in.location if job_in.location is not None else existing["location"],
+        description=job_in.description if job_in.description is not None else existing["description"],
+        requirements=job_in.requirements if job_in.requirements is not None else existing["requirements"],
+        salary=job_in.salary if job_in.salary is not None else existing["salary"],
+    )
+
