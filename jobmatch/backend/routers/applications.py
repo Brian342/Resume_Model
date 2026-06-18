@@ -463,6 +463,7 @@ async def my_application_stats(current_user: dict = Depends(require_seeker)):
     """
     return await db.get_seeker_stats(current_user["id"])
 
+
 @router.get(
     "/job/{job_id}",
     response_model=list[ApplicationOut],
@@ -486,4 +487,87 @@ async def list_applicants_for_job(
 
     return await db.get_applications_by_job(job_id)
 
+
+@router.get(
+    "/{application_id}/resume",
+    summary="Download an applicant's resume PDF (employer, job owner only)",
+)
+async def download_resume(
+        application_id: int,
+        current_user: dict = Depends(require_employer),
+):
+    """
+        Streams the applicant's uploaded resume file.
+        Mirrors show_resume_download() in employer_dashboard.py.
+        Only the employer who owns the underlying job can download it.
+        """
+    from fastapi.responses import FileResponse
+
+    app = await db.get_applications_by_id(application_id)
+    if app is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Application not found.")
+
+    job = await db.get_job_by_id(app["job_id"])
+    if job is None or job["employer_id"] != current_user["id"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only view applicants for your own jobs.")
+
+    resume_path = app.get("resume_path")
+    if not resume_path or not Path(resume_path).exists():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No resume file was uploaded for this application.")
+
+    return FileResponse(
+        path=resume_path,
+        media_type="application/pdf",
+        filename=Path(resume_path).name,
+    )
+# EMPLOYER: APPROVE / REJECT
+@router.patch(
+    "/{application_id}/status",
+    summary="Approve or reject an applicant (employer, job owner only)",
+)
+async def update_status(
+        application_id: int,
+        body: ApplicationStatusUpdate,
+        current_user: dict = Depends(require_employer),
+):
+    """
+        Updates an application's status and, on approve/reject, sends the
+        candidate a notification email — mirrors employer_dashboard.py's
+        Approve/Reject button handlers exactly, including "approved but
+        email failed" being a non-fatal warning rather than an error.
+        """
+    app = await db.get_application_by_id(application_id)
+    if app is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Application not Found.")
+
+    job = await db.get_job_by_id(app["job_id"])
+    if job is None or job["employer_id"] != current_user["id"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only review applicants for your own jobs.")
+
+    await db.update_application_status(application_id, body.status.value)
+
+    seeker = await db.get_user_by_id(app["seeker_id"])
+    email_sent = False
+    email_message = "Email not configured."
+
+    if seeker and body.status.value in ("approved", "rejected"):
+        try:
+            from ..email_utils import send_approval_email, send_rejection_email
+
+            sender = send_approval_email if body.status.value == "approved" else send_rejection_email
+
+            email_sent, email_message = sender(
+                to_email=seeker["email"],
+                to_name=seeker["full_name"],
+                job_title=job["title"],
+                company=job["company"],
+            )
+        except Exception as e:
+            email_message = f"Email failed: {e}"
+
+    return {
+        "message": f"Application marked as {body.status.value}.",
+        "email_sent": email_sent,
+        "email_message": email_message,
+    }
 
