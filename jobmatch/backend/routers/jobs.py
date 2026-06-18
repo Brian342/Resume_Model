@@ -105,3 +105,6 @@ async def list_active_jobs(
     """
     categories = None
     keywords = None
+
+    if use_preferences and current_user["role"] == "seeker":
+        prefs = await db.get
