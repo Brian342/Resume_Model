@@ -165,4 +165,5 @@ async def rescore_all_applicants(
         "model_loaded": MODEL_LOADED,
         "results": results,
     }
+""
 
