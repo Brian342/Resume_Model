@@ -38,9 +38,42 @@ import argparse
 import asyncio
 import shutil
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 import db  # your new PostgreSQL db.py
+
+
+def _parse_sqlite_datetime(value) -> datetime:
+    """
+    SQLite stores timestamps as plain strings (e.g. '2026-03-30 05:18:38'),
+    but asyncpg requires an actual datetime.datetime object — passing a
+    string raises: "expected a datetime.date or datetime.datetime instance,
+    got 'str'". This converts whatever SQLite gives us into a real datetime,
+    falling back to "now" only if the value is missing or unparseable.
+    """
+    if isinstance(value, datetime):
+        return value
+
+    if not value:
+        return datetime.utcnow()
+
+    # SQLite's CURRENT_TIMESTAMP format is "YYYY-MM-DD HH:MM:SS",
+    # but occasionally includes microseconds or a "T" separator.
+    formats = (
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%dT%H:%M:%S",
+    )
+    for fmt in formats:
+        try:
+            return datetime.strptime(value, fmt)
+        except (ValueError, TypeError):
+            continue
+
+    print(f"  ⚠ Could not parse timestamp '{value}', using current time instead.")
+    return datetime.utcnow()
 
 
 def _row_to_dict(row: sqlite3.Row) -> dict:
@@ -73,7 +106,7 @@ async def migrate_users(sqlite_conn: sqlite3.Connection) -> dict:
             role=r["role"],
             job_categories=r.get("job_categories") or "",
             job_keywords=r.get("job_keywords") or "",
-            created_at=r["created_at"],
+            created_at=_parse_sqlite_datetime(r["created_at"]),
         )
         new_id = await db.database.execute(query)
         id_map[r["id"]] = new_id
@@ -112,7 +145,7 @@ async def migrate_jobs(sqlite_conn: sqlite3.Connection, user_id_map: dict) -> di
             requirements=r["requirements"],
             salary=r.get("salary") or "",
             is_active=bool(r["is_active"]),
-            created_at=r["created_at"],
+            created_at=_parse_sqlite_datetime(r["created_at"]),
         )
         new_id = await db.database.execute(query)
         id_map[r["id"]] = new_id
@@ -149,7 +182,7 @@ async def migrate_applications(
         new_seeker_id = user_id_map.get(r["seeker_id"])
 
         if new_job_id is None or new_seeker_id is None:
-            print(f"   Skipping application id={r['id']} — "
+            print(f"  ⚠ Skipping application id={r['id']} — "
                   f"missing job_id or seeker_id mapping")
             skipped += 1
             continue
@@ -169,7 +202,7 @@ async def migrate_applications(
                 shutil.copy2(old_file, new_file)
                 resume_path = str(new_file)
             else:
-                print(f"   Resume file not found, keeping original path: {old_file}")
+                print(f"  ⚠ Resume file not found, keeping original path: {old_file}")
 
         query = db.applications.insert().values(
             job_id=new_job_id,
@@ -179,7 +212,7 @@ async def migrate_applications(
             ai_score=r.get("ai_score"),
             ml_label=r.get("ml_label"),
             status=r.get("status") or "pending",
-            applied_at=r["applied_at"],
+            applied_at=_parse_sqlite_datetime(r["applied_at"]),
         )
         await db.database.execute(query)
         inserted += 1
@@ -194,11 +227,12 @@ async def run_migration(sqlite_path: str, copy_resumes_from: str = None):
 
     resumes_dir = Path(copy_resumes_from) if copy_resumes_from else None
 
-    print(f" Reading from: {sqlite_path}")
+    print(f"📂 Reading from: {sqlite_path}")
     sqlite_conn = sqlite3.connect(sqlite_path)
     sqlite_conn.row_factory = sqlite3.Row
 
     print("🔌 Connecting to PostgreSQL...")
+    db.create_tables()   # CREATE TABLE IF NOT EXISTS — safe to run even if main.py never has
     await db.connect()
 
     try:

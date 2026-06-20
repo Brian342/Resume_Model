@@ -22,9 +22,9 @@ PERMISSION MODEL:
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Optional
 
-from .. import db
-from ..auth_utils import get_current_user, require_employer
-from ..models import JobCreated, JobUpdate, JobOut, MessageResponse
+import db
+from auth_utils import get_current_user, require_employer
+from models import JobCreated, JobUpdate, JobOut, MessageResponse
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 

@@ -33,9 +33,9 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File, Form
-from .. import db
-from ..auth_utils import get_current_user, require_employer, require_seeker
-from ..models import ApplicationOut, ApplicationStatusUpdate, MessageResponse
+import db
+from auth_utils import get_current_user, require_employer, require_seeker
+from models import ApplicationOut, ApplicationStatusUpdate, MessageResponse
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
 

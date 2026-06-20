@@ -32,13 +32,13 @@ NOTE ON ARCHITECTURE:
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Depends, status
 
-from .. import db
-from ..auth_utils import require_employer
-from ..models import MatchResult
+import db
+from auth_utils import require_employer
+from models import MatchResult
 
 # Reuse the exact scoring logic + loaded model from applications.py —
 # single source of truth, same as the original app only scoring in apply.py.
-from ..routers.applications import score_resume, MODEL_LOADED
+from routers.applications import score_resume, MODEL_LOADED
 
 router = APIRouter(prefix="/match", tags=["Matching"])
 

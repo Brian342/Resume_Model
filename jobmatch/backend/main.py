@@ -31,7 +31,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-import bd
+import db
 from routers import auth, jobs, applications, match
 
 load_dotenv()
