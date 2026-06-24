@@ -1,16 +1,3 @@
-/**
- * components/ProtectedRoute.jsx
- * ==================================
- * Gatekeeper for routes that require login (and optionally a specific role).
- * Mirrors the "if not st.session_state['logged_in']: show login" check
- * at the top of main() in app.py, plus the role-specific page routing
- * (seeker_dashboard vs employer_dashboard).
- *
- * USAGE (once we wire up App.jsx):
- *   <ProtectedRoute><Layout /></ProtectedRoute>                    -> any logged-in user
- *   <ProtectedRoute requireRole="seeker"><JobBoard /></ProtectedRoute>  -> seekers only
- */
-
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 

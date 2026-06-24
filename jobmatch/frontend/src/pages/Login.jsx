@@ -1,11 +1,3 @@
-/**
- * pages/Login.jsx — mirrors show_login_page() in app.py
- * ==========================================================
- * Note: this exports `authStyles` too, since Register.jsx (next file)
- * shares the exact same visual shell (auth-screen, auth-card, etc.)
- * and will import that constant rather than duplicating the CSS.
- */
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
