@@ -17,6 +17,15 @@ export default function Layout() {
         ];
 
     const employerLinks = [
-        { to: "/employer", label}
-        ]
+        { to: "/employer", label: "Dashboard" },
+        { to: "/employer/post", label: "Post a job" },
+        ];
+
+    const links = user?.role === "employer" ? employerLinks : seekerLinks;
+
+    return (
+        <div className="app-shell">
+            <aside className="sidebar">
+
+        )
     }
