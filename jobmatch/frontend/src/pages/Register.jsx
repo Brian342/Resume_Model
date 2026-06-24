@@ -99,16 +99,29 @@ export default function Register() {
                             </div>
 
                             <div className="field">
-                            <label htmlFor="email">Email address</label>
-                            <input
-                                id="email"
-                                type="email"
-                                placeholder="you@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-
-                            />
+                            <label> =I am a...</label>
+                            <div className="role-pills">
+                            <button
+                                type="button"
+                                className={"role-pill" + (role === "seeker" ? " role-pill-active": "")}
+                                onClick={() => setRole("seeker")}
+                            >
+                                Job Seeker
+                             </button>
+                             <button
+                                type="button"
+                                className={"role-pill" + (role === "employer" ? " role-pill-active": "")}
+                                onClick={() => setRole("employer")}
+                             >
+                             Employer
+                             </button>
                             </div>
+                            </div>
+
+                            <button className="btn btn-primary auth-submit" type="submit" disabled={submitting}>
+                                {submitting ? <span className="spinner spinner-light" /> : "Create account"}
+                                </button>
+                             </form>
 
 
 
