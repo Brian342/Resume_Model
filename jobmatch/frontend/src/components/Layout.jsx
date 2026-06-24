@@ -12,6 +12,11 @@ export default function Layout() {
 
     const seekerLinks = [
         { to: "/dashboard", label: "My Dashboard" },
-        {}
+        { to: "/jobs", label: "Browse Jobs" },
+        { to: "/preferences", label: "Job Preferences" },
+        ];
+
+    const employerLinks = [
+        { to: "/employer", label}
         ]
     }
