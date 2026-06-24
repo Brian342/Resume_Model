@@ -53,7 +53,65 @@ export default function Register() {
                 <p className="auth-sub">Pioneer Insurance Group Job Match platform</p>
 
                 <form onSubmit={handleSubmit} className="auth-form">
-                    {error && <div>}
+                    {error && <div className="alert alert-error">{error}</div>}
+                    {success && <div className="alert alert-success">{success}</div>}
+
+                    <div className="field">
+                        <label htmlFor="fullName">Full name</label>
+                        <input
+                            id="fullName"
+                            placeholder="John Doe"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                        />
+                        </div>
+
+                        <div className="field">
+                            <label htmlFor="email">Email address</label>
+                            <input
+                                id="email"
+                                type="email"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+
+                            />
+                            </div>
+
+                            <div className="field">
+                            <label htmlFor="password">Password (min 6 characters)</label>
+                            <input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            </div>
+
+                            <div className="field">
+                            <label htmlFor="confirm">Confirm Password</label>
+                            <input
+                                id="confirm"
+                                type="password"
+                                value={confirm}
+                                onChange={(e) => setConfirm(e.target.value)}
+                            />
+                            </div>
+
+                            <div className="field">
+                            <label htmlFor="email">Email address</label>
+                            <input
+                                id="email"
+                                type="email"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+
+                            />
+                            </div>
+
+
+
         )
 
     }
