@@ -123,8 +123,14 @@ export default function Register() {
                                 </button>
                              </form>
 
+                             <div className="auth-divider" />
 
+                             <p className="auth-footer-text">
+                                 Already have an account? <Link to="/login"> Back to login</Link>
+                                </p>
+                                </div>
 
-        )
-
+                                <style>{authStyles}</style>
+                                </div>
+        );
     }
