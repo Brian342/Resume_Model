@@ -1,122 +1,97 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+/**
+ * App.jsx — Route Configuration
+ * =================================
+ * Replaces the if/elif page routing inside main() in app.py with real
+ * React Router routes.
+ *
+ * CURRENT STATE: only Login/Register + placeholder dashboards exist so
+ * far. As we build each real page (JobBoard, JobDetail, ApplyForm,
+ * EmployerDashboard, etc.) we'll swap the placeholders out one at a time.
+ */
 
-function App() {
-  const [count, setCount] = useState(0)
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
+// ── Temporary placeholders — will be replaced as we build each page ──
+function SeekerDashboardPlaceholder() {
+  const { user } = useAuth();
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="page-shell">
+      <div className="page-header">
+        <span className="eyebrow">Overview</span>
+        <h1>Welcome back, {user?.full_name?.split(" ")[0]}</h1>
+        <p>Your seeker dashboard is coming up next.</p>
+      </div>
+    </div>
+  );
 }
 
-export default App
+function EmployerDashboardPlaceholder() {
+  const { user } = useAuth();
+  return (
+    <div className="page-shell">
+      <div className="page-header">
+        <span className="eyebrow">Employer dashboard</span>
+        <h1>Welcome back, {user?.full_name?.split(" ")[0]}</h1>
+        <p>Your job postings will show up here once we build this page.</p>
+      </div>
+    </div>
+  );
+}
+
+function HomeRedirect() {
+  // Mirrors main()'s role-based landing: seekers go to their dashboard,
+  // employers go to theirs.
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to={user.role === "employer" ? "/employer" : "/dashboard"} replace />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Authenticated shell */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute requireRole="seeker">
+                  <SeekerDashboardPlaceholder />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employer"
+              element={
+                <ProtectedRoute requireRole="employer">
+                  <EmployerDashboardPlaceholder />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          <Route path="/" element={<HomeRedirect />} />
+          <Route path="*" element={<HomeRedirect />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
