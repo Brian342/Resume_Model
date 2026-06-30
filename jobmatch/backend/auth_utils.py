@@ -169,7 +169,7 @@ async def require_seeker(current_user: dict = Depends(get_current_user)) -> dict
         )
     return current_user
 
-
+""
 async def require_employer(current_user: dict = Depends(get_current_user)) -> dict:
     """
     Use this on routes only employers can access, e.g. posting jobs:
